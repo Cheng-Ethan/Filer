@@ -378,7 +378,7 @@ _TTS_JS = (
     'volEl.oninput=function(){audio.volume=(parseFloat(volEl.value)||0)/100;'
     'try{localStorage.setItem("dls_tts_volume",volEl.value);}catch(e){}};}'
     'function setState(s){if(state)state.textContent=s||"";}'
-    'function fname(){try{return new URLSearchParams(location.search).get("name")||"dl_server";}catch(e){return "dl_server";}}'
+    'function fname(){try{return new URLSearchParams(location.search).get("name")||"filer";}catch(e){return "filer";}}'
     'var zhVoice={"zh-CN-XiaoxiaoNeural":"晓晓","zh-CN-XiaoyiNeural":"晓伊","zh-CN-YunxiNeural":"云希","zh-CN-YunjianNeural":"云健","zh-CN-YunxiaNeural":"云夏","zh-CN-YunyangNeural":"云扬","zh-HK-HiuGaaiNeural":"晓佳","zh-HK-HiuMaanNeural":"晓曼","zh-HK-WanLungNeural":"云龙","zh-TW-HsiaoChenNeural":"晓臻","zh-TW-HsiaoYuNeural":"晓雨","zh-TW-YunJheNeural":"云哲"};'
     'function shortVoice(id,name){if(zhVoice[id])return zhVoice[id];'
     'var s=(name||id||"").replace(/^Microsoft\\s+/,"").replace(/\\s*\\(.*$/,"");'
@@ -412,7 +412,7 @@ _TTS_JS = (
     'audio.addEventListener("playing",function(){'
     'btn.textContent="暂停";setState("朗读中");'
     'if("mediaSession" in navigator){try{'
-    'navigator.mediaSession.metadata=new MediaMetadata({title:fname(),artist:"dl_server"});'
+    'navigator.mediaSession.metadata=new MediaMetadata({title:fname(),artist:"filer"});'
     'navigator.mediaSession.setActionHandler("play",function(){audio.play();});'
     'navigator.mediaSession.setActionHandler("pause",function(){audio.pause();});'
     'navigator.mediaSession.setActionHandler("stop",function(){reset();});'
@@ -459,7 +459,7 @@ _BROWSE_TEMPLATE = '''<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{FILENAME}} - 文件浏览</title>
+<title>{{FILENAME}} - filer</title>
 <style>
 *{box-sizing:border-box;}
 body{margin:0;font-family:system-ui,"Microsoft YaHei",sans-serif;background:#f1f5f9;color:#1e293b;}

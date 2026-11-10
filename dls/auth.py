@@ -6,13 +6,14 @@ import os
 class AuthMixin:
     def __init__(self, *args, user=None, password=None, **kwargs):
         if user is None and password is None:
-            env_auth = os.environ.get('DL_AUTH')
+            env_auth = (os.environ.get('FILER_AUTH')
+                        or os.environ.get('DL_AUTH'))
             if env_auth:
                 user, _, password = env_auth.partition(':')
         if not user or not password:
             raise ValueError(
                 "Basic Auth credentials required: use --user 'name:pass' "
-                "or set DL_AUTH='name:pass'")
+                "or set FILER_AUTH='name:pass' (DL_AUTH is also accepted)")
         self.auth_user = user
         self.auth_pass = password
         super().__init__(*args, **kwargs)

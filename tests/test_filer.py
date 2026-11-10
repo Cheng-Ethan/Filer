@@ -17,7 +17,7 @@ import zipfile
 from http.server import ThreadingHTTPServer
 from unittest import mock
 
-import dl_server
+import filer
 from dls.handler import ForceDownloadHandler
 
 AUTH = 'Basic ' + base64.b64encode(b'admin:test').decode('ascii')
@@ -104,20 +104,20 @@ class HttpTest(unittest.TestCase):
         stderr = io.StringIO()
         with mock.patch.dict(os.environ, {}, clear=True), \
                 mock.patch.object(sys, 'argv', argv), \
-                mock.patch('dl_server.ThreadingHTTPServer') as server, \
+                mock.patch('filer.ThreadingHTTPServer') as server, \
                 contextlib.redirect_stderr(stderr):
             with self.assertRaises(SystemExit) as cm:
-                dl_server.main()
+                filer.main()
         self.assertEqual(cm.exception.code, 2)
         server.assert_not_called()
         return stderr.getvalue()
 
     def test_missing_user_refuses_start(self):
-        err = self._run_main(['dl_server.py'])
+        err = self._run_main(['filer.py'])
         self.assertIn('DL_AUTH', err)
 
     def test_empty_password_refuses_start(self):
-        err = self._run_main(['dl_server.py', '--user', 'admin:'])
+        err = self._run_main(['filer.py', '--user', 'admin:'])
         self.assertIn("--user must be 'username:password', both non-empty", err)
 
     def test_raw_gbk_charset(self):

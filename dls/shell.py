@@ -463,8 +463,9 @@ class ShellMixin:
             sink(chunk)
     def _spawn_shell(self, cmd, d):
         """启动 pty shell 子进程，返回 (proc, master)。三方 fds 接 pty，独立进程组。"""
-        # 剔除 DL_AUTH，避免用户在终端里执行 env 看到凭据。
-        env = {k: v for k, v in os.environ.items() if k != 'DL_AUTH'}
+        # 剔除 FILER_AUTH / DL_AUTH，避免用户在终端里执行 env 看到凭据。
+        env = {k: v for k, v in os.environ.items()
+               if k not in ('FILER_AUTH', 'DL_AUTH')}
         env.setdefault('TERM', 'xterm-256color')
         env.setdefault('COLORTERM', 'truecolor')
         env.setdefault('LANG', 'C.UTF-8')

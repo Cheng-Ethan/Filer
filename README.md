@@ -1,9 +1,8 @@
-# pyfilebrowser
+# filer
 
 A zero-dependency, self-hosted file browser with built-in preview and terminal. One Python file to start — no pip install, no Docker required.
 
-![pyfilebrowser main screenshot](docs/screenshots/main.png)
-
+![filer main screenshot](docs/screenshots/main.png)
 
 ## Why this exists
 
@@ -27,24 +26,28 @@ This project is intentionally constrained. It uses only the Python standard libr
 - Web article fetching and reading, including proxied images.
 - Office preview through LibreOffice.
 
-### Preview
+## Screenshots
+
+### Document preview
 
 ![Markdown preview](docs/screenshots/preview.png)
 
-### Terminal
+### Built-in terminal
 
 ![Built-in terminal](docs/screenshots/terminal.png)
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/<your-name>/pyfilebrowser.git
-cd pyfilebrowser
-export DL_AUTH='yourname:yourpassword'
-python3 dl_server.py --dir /your/path
+git clone https://github.com/<your-name>/filer.git
+cd filer
+export FILER_AUTH='yourname:yourpassword'
+python3 filer.py --dir /your/path
 ```
 
-`DL_AUTH` is required and uses the `username:password` format.
+`FILER_AUTH` uses the `username:password` format; `DL_AUTH` is accepted as a fallback, and `--user` can be used instead.
+
+Open http://127.0.0.1:9000 in your browser.
 
 ## Security
 

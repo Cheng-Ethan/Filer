@@ -133,7 +133,7 @@ class FilesMixin:
         body = (
             '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            '<title>文件下载</title>'
+            '<title>filer</title>'
             '<style>'
             '*{box-sizing:border-box;}'
             'body{font-family:system-ui,"Microsoft YaHei",sans-serif;margin:0;padding:24px 24px 64px;background:#f1f5f9;color:#1e293b;}'

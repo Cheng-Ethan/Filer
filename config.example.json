@@ -4,7 +4,7 @@
     "port": "TCP port for the HTTP server.",
     "root": "Directory exposed by the file browser.",
     "auth.username": "HTTP Basic Auth username.",
-    "auth.password": "HTTP Basic Auth password. Prefer setting DL_AUTH in the environment.",
+    "auth.password": "HTTP Basic Auth password. Prefer setting FILER_AUTH in the environment; DL_AUTH is also accepted.",
     "tts.voice": "Default Edge-TTS voice name.",
     "tts.rate": "Default speech rate multiplier, for example 1.0."
   },

@@ -19,7 +19,8 @@ from dls.handler import ForceDownloadHandler
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Auth download HTTP file server')
+    parser = argparse.ArgumentParser(prog='filer',
+                                     description='Auth download HTTP file server')
     parser.add_argument('--port', type=int, default=9000)
     parser.add_argument('--dir', default='.', help='Directory to serve')
     parser.add_argument('--bind', default='127.0.0.1',
@@ -27,13 +28,14 @@ def main():
                              '暴露到网络请置于 HTTPS 反向代理之后）')
     parser.add_argument('--user',
                         help="格式 username:password（Basic Auth）；"
-                             "也可用环境变量 DL_AUTH，--user 优先")
+                             "也可用环境变量 FILER_AUTH（或 DL_AUTH），--user 优先")
     args = parser.parse_args()
 
-    auth = args.user if args.user is not None else os.environ.get('DL_AUTH')
+    auth = args.user if args.user is not None else (
+        os.environ.get('FILER_AUTH') or os.environ.get('DL_AUTH'))
     if auth is None:
         parser.error("--user must be 'username:password', both non-empty "
-                     "(or set DL_AUTH)")
+                     "(or set FILER_AUTH / DL_AUTH)")
     user, _, password = auth.partition(':')
     if not user or not password:
         parser.error("--user must be 'username:password', both non-empty")
@@ -42,9 +44,9 @@ def main():
     handler = functools.partial(
         ForceDownloadHandler, user=user, password=password)
     server = ThreadingHTTPServer((args.bind, args.port), handler)
-    print(f'Serving {args.dir} on {args.bind}:{args.port} (auth: {user}:****)')
+    print(f'filer: Serving {args.dir} on {args.bind}:{args.port} (auth: {user}:****)')
     if args.bind == '0.0.0.0':
-        print('WARNING: listening on all interfaces. Basic Auth is clear-text — use HTTPS.')
+        print('filer: WARNING: listening on all interfaces. Basic Auth is clear-text — use HTTPS.')
     server.serve_forever()
 
 

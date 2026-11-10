@@ -1,30 +1,30 @@
 # Deployment
 
-The examples below assume the application is checked out at `/path/to/pyfilebrowser`, runs as `<your-user>`, serves `/path/to/files`, and listens on port `9000` behind a reverse proxy.
+The examples below assume the application is checked out at `/path/to/filer`, runs as `<your-user>`, serves `/path/to/files`, and listens on port `9000` behind a reverse proxy.
 
 ## systemd
 
 Create the credential file. Only root should be able to read it:
 
 ```bash
-sudo install -m 600 /dev/null /etc/pyfilebrowser.env
-echo "DL_AUTH='<your-user>:<strong-password>'" | sudo tee /etc/pyfilebrowser.env >/dev/null
+sudo install -m 600 /dev/null /etc/filer.env
+echo "FILER_AUTH='<your-user>:<strong-password>'" | sudo tee /etc/filer.env >/dev/null
 ```
 
-Create `/etc/systemd/system/pyfilebrowser.service`:
+Create `/etc/systemd/system/filer.service`:
 
 ```ini
 [Unit]
-Description=pyfilebrowser
+Description=filer
 After=network.target
 
 [Service]
 Type=simple
 User=<your-user>
 Group=<your-user>
-WorkingDirectory=/path/to/pyfilebrowser
-EnvironmentFile=/etc/pyfilebrowser.env
-ExecStart=/usr/bin/python3 /path/to/pyfilebrowser/dl_server.py --dir /path/to/files --bind 127.0.0.1 --port 9000
+WorkingDirectory=/path/to/filer
+EnvironmentFile=/etc/filer.env
+ExecStart=/usr/bin/python3 /path/to/filer/filer.py --dir /path/to/files --bind 127.0.0.1 --port 9000
 Restart=on-failure
 RestartSec=2
 
@@ -36,7 +36,7 @@ Enable and start it:
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable --now pyfilebrowser.service
+sudo systemctl enable --now filer.service
 ```
 
 ## nginx with HTTPS
@@ -93,12 +93,12 @@ files.example.com {
 If the service does not start, check its state first:
 
 ```bash
-systemctl status pyfilebrowser.service
-journalctl -u pyfilebrowser.service -n 100 --no-pager
+systemctl status filer.service
+journalctl -u filer.service -n 100 --no-pager
 ```
 
 Common causes:
 
-- `/etc/pyfilebrowser.env` is missing, unreadable, or does not contain a valid `DL_AUTH` value.
+- `/etc/filer.env` is missing, unreadable, or does not contain a valid `FILER_AUTH` value (`DL_AUTH` is accepted as a fallback).
 - The run user cannot read the configured file root.
 - The port is already in use or the reverse proxy points at the wrong address.

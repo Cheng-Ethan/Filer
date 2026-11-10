@@ -21,8 +21,9 @@ _IMAGE_DPI = 120
 
 
 def _child_env():
-    # 不把 DL_AUTH 传给子进程，避免凭据通过环境泄露。
-    return {k: v for k, v in os.environ.items() if k != 'DL_AUTH'}
+    # 不把 FILER_AUTH / DL_AUTH 传给子进程，避免凭据通过环境泄露。
+    return {k: v for k, v in os.environ.items()
+            if k not in ('FILER_AUTH', 'DL_AUTH')}
 
 
 def _local(tag):
