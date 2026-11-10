@@ -4,7 +4,6 @@ A zero-dependency, self-hosted file browser with built-in preview and terminal. 
 
 ![pyfilebrowser main screenshot](docs/screenshots/main.png)
 
-<!-- TODO: replace docs/screenshots/main.png with the final screenshot. -->
 
 ## Why this exists
 
@@ -27,6 +26,14 @@ This project is intentionally constrained. It uses only the Python standard libr
 - Text-to-speech reading with Edge-TTS; no API key required.
 - Web article fetching and reading, including proxied images.
 - Office preview through LibreOffice.
+
+### Preview
+
+![Markdown preview](docs/screenshots/preview.png)
+
+### Terminal
+
+![Built-in terminal](docs/screenshots/terminal.png)
 
 ## Quick Start
 
