@@ -51,12 +51,12 @@ pre::-webkit-scrollbar{height:8px;}
 .trow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;}
 #ttsGroup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 #ttsGroup[hidden]{display:none !important;}
-.tbtn{min-width:6.5em;height:var(--h-ctl);padding:0 var(--px-ctl);border-radius:var(--radius);border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:var(--font-ui);cursor:pointer;}
+.tbtn{width:5.75em;height:var(--h-ctl);padding:0 10px;border-radius:var(--radius);border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:var(--font-ui);cursor:pointer;}
 .tbtn:hover{background:#eef2f7;}
 .tbtn.primary{background:#0f766e;color:#fff;border-color:#0f766e;}
 .tbtn.primary:hover{background:#115e59;}
 .tsel{height:var(--h-ctl);border-radius:var(--radius);border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:var(--font-ui);padding:0 var(--px-ctl);}
-.tstate{font-size:12px;color:#0f766e;flex:0 0 7em;width:7em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tstate{font-size:12px;color:#0f766e;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tset{position:relative;flex:0 0 auto;}
 .tset>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
 .tset>summary::-webkit-details-marker{display:none;}
@@ -132,7 +132,6 @@ window.addEventListener('DOMContentLoaded',function(){document.getElementById('m
     <div id="ttsGroup" hidden>
       <button class="tbtn primary" id="ttsBtn" type="button" title="边读边生成，不会预先生成整篇">朗读全文</button>
       <button class="tbtn" id="ttsStop" type="button">停止</button>
-      <span class="tstate" id="ttsState"></span>
     </div>
     <details class="tset" id="ttsSettings" hidden>
       <summary class="tbtn">朗读设置</summary>
@@ -154,6 +153,7 @@ window.addEventListener('DOMContentLoaded',function(){document.getElementById('m
         </label>
       </div>
     </details>
+    <span class="tstate" id="ttsState"></span>
     <audio id="ttsAudio" class="taudio" preload="none"></audio>
   </div>
 </div>
@@ -202,12 +202,12 @@ pre{margin:0;padding:18px 20px;white-space:pre-wrap;word-break:break-word;font-f
 .trow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;}
 #ttsGroup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 #ttsGroup[hidden]{display:none !important;}
-.tbtn{min-width:6.5em;height:var(--h-ctl);padding:0 var(--px-ctl);border-radius:var(--radius);border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:var(--font-ui);cursor:pointer;}
+.tbtn{width:5.75em;height:var(--h-ctl);padding:0 10px;border-radius:var(--radius);border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:var(--font-ui);cursor:pointer;}
 .tbtn:hover{background:#eef2f7;}
 .tbtn.primary{background:#0f766e;color:#fff;border-color:#0f766e;}
 .tbtn.primary:hover{background:#115e59;}
 .tsel{height:var(--h-ctl);border-radius:var(--radius);border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:var(--font-ui);padding:0 var(--px-ctl);}
-.tstate{font-size:12px;color:#0f766e;flex:0 0 7em;width:7em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tstate{font-size:12px;color:#0f766e;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tset{position:relative;flex:0 0 auto;}
 .tset>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
 .tset>summary::-webkit-details-marker{display:none;}
@@ -239,7 +239,6 @@ pre{margin:0;padding:18px 20px;white-space:pre-wrap;word-break:break-word;font-f
     <div id="ttsGroup" hidden>
       <button class="tbtn primary" id="ttsBtn" type="button" title="边读边生成，不会预先生成整篇">朗读全文</button>
       <button class="tbtn" id="ttsStop" type="button">停止</button>
-      <span class="tstate" id="ttsState"></span>
     </div>
     <details class="tset" id="ttsSettings" hidden>
       <summary class="tbtn">朗读设置</summary>
@@ -265,6 +264,7 @@ pre{margin:0;padding:18px 20px;white-space:pre-wrap;word-break:break-word;font-f
       <summary class="tbtn">编码</summary>
       <div class="tsetbody"><span class="enc">{{ENC_LINKS}}</span></div>
     </details>
+    <span class="tstate" id="ttsState"></span>
     <audio id="ttsAudio" class="taudio" preload="none"></audio>
   </div>
 </div>
