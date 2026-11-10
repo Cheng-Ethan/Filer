@@ -1,0 +1,22 @@
+{
+  "_notes": {
+    "bind": "Address the HTTP server listens on. Keep 127.0.0.1 when using a reverse proxy.",
+    "port": "TCP port for the HTTP server.",
+    "root": "Directory exposed by the file browser.",
+    "auth.username": "HTTP Basic Auth username.",
+    "auth.password": "HTTP Basic Auth password. Prefer setting DL_AUTH in the environment.",
+    "tts.voice": "Default Edge-TTS voice name.",
+    "tts.rate": "Default speech rate multiplier, for example 1.0."
+  },
+  "bind": "127.0.0.1",
+  "port": 9000,
+  "root": "/path/to/files",
+  "auth": {
+    "username": "yourname",
+    "password": "yourpassword"
+  },
+  "tts": {
+    "voice": "en-US-AriaNeural",
+    "rate": 1.0
+  }
+}
