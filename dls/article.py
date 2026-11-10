@@ -12,6 +12,7 @@ import urllib.request
 from html.parser import HTMLParser
 
 from .templates import _ARTICLE_TEMPLATE
+from .ui import BASE_CSS, FONT_STACK
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _CACHE = os.path.join(_ROOT, 'cache', 'articles')
@@ -345,23 +346,29 @@ class ArticleMixin:
             self._send_html(
                 '<!DOCTYPE html><meta charset="utf-8"><meta name="viewport" '
                 'content="width=device-width,initial-scale=1">'
-                '<body style="font-family:system-ui,sans-serif;padding:24px">'
+                '<style>' + BASE_CSS +
+                'body{font-family:' + FONT_STACK + ';padding:24px}'
+                'input[type=url]{width:70%;height:var(--h-ctl);padding:0 var(--px-ctl);'
+                'font-size:var(--font-ui);border-radius:var(--radius);box-sizing:border-box}'
+                '</style><body>'
                 '<h2>读文章</h2><form action="/read" method="get">'
-                '<input name="url" type="url" style="width:70%;height:38px" '
+                '<input name="url" type="url" '
                 'placeholder="粘贴公众号或网页文章链接" required> '
-                '<button type="submit">读取</button></form>'
+                '<button class="btn" type="submit">读取</button></form>'
                 '<p><a href="/">返回文件列表</a></p></body>')
             return
         try:
             article = fetch_article(url)
         except Exception as e:
-            self._send_html(
+            self._send_html((
                 '<!DOCTYPE html><meta charset="utf-8"><meta name="viewport" '
                 'content="width=device-width,initial-scale=1">'
-                '<body style="font-family:system-ui,sans-serif;padding:24px">'
+                '<style>' + BASE_CSS +
+                'body{font-family:' + FONT_STACK + ';padding:24px}'
+                '</style><body>'
                 '<h2>读取失败</h2><p>%s</p><p><a href="/read?url=%s">重试</a> · '
                 '<a href="/">返回文件列表</a></p></body>'
-                % (html.escape(str(e)), html.escape(urllib.parse.quote(url))))
+                ) % (html.escape(str(e)), html.escape(urllib.parse.quote(url))))
             return
         title = html.escape(article.get('title') or '未命名文章')
         author = html.escape(article.get('author') or '')

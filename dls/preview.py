@@ -18,6 +18,7 @@ from .templates import (_BROWSE_TEMPLATE, _ICON_DEL, _ICON_DL, _ICON_INFO,
                         _WRAP_TEMPLATE)
 from .textenc import (_clip_text, _decode_bytes, _detect_encoding,
                       _detect_file_encoding)
+from .ui import BASE_CSS, FONT_STACK
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _PDFJS_VIEWER = os.path.join(_ROOT, 'static', 'pdfjs', 'web', 'viewer.html')
@@ -397,7 +398,7 @@ class PreviewMixin:
         page = ('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
                 '<meta name="viewport" content="width=device-width,initial-scale=1">'
                 '<title>无法预览</title><style>'
-                'body{font-family:system-ui,"Microsoft YaHei",sans-serif;'
+                'body{font-family:' + FONT_STACK + ';'
                 'background:#f1f5f9;color:#1e293b;padding:24px;}'
                 '.box{max-width:760px;margin:40px auto;background:#fff;'
                 'border-radius:12px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.08);}'
@@ -409,6 +410,7 @@ class PreviewMixin:
                 '</div></body></html>') % (
                     html.escape(msg), html.escape(hint),
                     html.escape(target or '/', quote=True))
+        page = page.replace('<style>', '<style>' + BASE_CSS, 1)
         body = page.encode('utf-8')
         self.send_response(403)
         self.send_header('Content-Type', 'text/html; charset=utf-8')
