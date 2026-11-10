@@ -49,38 +49,38 @@ class ShellMixin:
         return (
             '<div class="shell" id="shell">'
             '<div class="shhead">'
-            '<button class="shtog" id="shtog" title="折叠/展开输出" >▾</button>'
-            '<span class="shlabel">📂 当前目录：</span>'
+            '<button class="shtog" id="shtog" title="{{i18n:shell.toggle}}" >▾</button>'
+            '<span class="shlabel">📂 {{i18n:shell.current_dir}} </span>'
             '<span class="shcwd">' + html.escape(fs_cwd) + '</span>'
-            '<button class="shhist" id="shhist" type="button" title="命令历史搜索（Ctrl+S）">🕘</button>'
-            '<button class="shhist" id="shkeybtn" type="button" title="快捷操作（停止 / 清屏 / 上一条 / 下一条）">⌨</button>'
-            '<button class="shhelp" id="shhelp" type="button" title="使用说明">' + _ICON_HELP + '</button>'
+            '<button class="shhist" id="shhist" type="button" title="{{i18n:shell.history_search}}">🕘</button>'
+            '<button class="shhist" id="shkeybtn" type="button" title="{{i18n:shell.quick_actions}}">⌨</button>'
+            '<button class="shhelp" id="shhelp" type="button" title="{{i18n:shell.help}}">' + _ICON_HELP + '</button>'
             '</div>'
-            '<div class="shhint" id="shhint" hidden>💡 输入命令后按回车执行；Ctrl+C 停止/清空，Ctrl+S 搜索历史，Ctrl+L 清屏，↑/↓ 切换历史；手机端可点右上角 🕘 打开历史、⌨ 打开快捷操作；输出区域可用滚轮/双指滑动上下查看，PageUp/PageDown 翻页。</div>'
+            '<div class="shhint" id="shhint" hidden>{{i18n:shell.hint}}</div>'
             '<div class="shhistpanel" id="shhistpanel" hidden>'
             '<div class="shsearchrow">'
             '<input id="shsearch" type="text" autocomplete="off" spellcheck="false" '
-            'placeholder="搜索命令历史…（Esc 关闭）">'
+            'placeholder="{{i18n:shell.search_placeholder}}">'
             '</div>'
             '<div class="shlists">'
-            '<div class="shlist"><div class="shlisttitle">🔥 常用 Top 10</div>'
+            '<div class="shlist"><div class="shlisttitle">{{i18n:shell.top_commands}}</div>'
             '<div class="shchips" id="shfreq"></div></div>'
-            '<div class="shlist"><div class="shlisttitle">🕘 最近使用</div>'
+            '<div class="shlist"><div class="shlisttitle">{{i18n:shell.recent}}</div>'
             '<div class="shchips" id="shrecent"></div></div>'
             '</div>'
             '</div>'
             '<pre class="shout collapsed" id="shout"></pre>'
-            '<button class="shback" id="shback" type="button" hidden>↓ 回到底部</button>'
+            '<button class="shback" id="shback" type="button" hidden>{{i18n:shell.back_to_bottom}}</button>'
             '<div class="shkeys" id="shkeypanel" hidden>'
-            '<button class="shkey" id="shcancel" type="button" title="运行中：终止命令；空闲：清空输入（Ctrl+C）">■ 停止<small>Ctrl+C</small></button>'
-            '<button class="shkey" id="shkeyhist" type="button" title="搜索命令历史（Ctrl+S）">🕘 历史<small>Ctrl+S</small></button>'
-            '<button class="shkey" id="shkeyclear" type="button" title="清空屏幕输出（Ctrl+L）">🧹 清屏<small>Ctrl+L</small></button>'
-            '<button class="shkey" id="shkeyprev" type="button" title="上一条历史命令（↑）">↑ 上一条</button>'
-            '<button class="shkey" id="shkeynext" type="button" title="下一条历史命令（↓）">↓ 下一条</button>'
+            '<button class="shkey" id="shcancel" type="button" title="{{i18n:shell.quick_actions}}">■ {{i18n:shell.stop}}<small>Ctrl+C</small></button>'
+            '<button class="shkey" id="shkeyhist" type="button" title="{{i18n:shell.history_search}}">{{i18n:shell.history}}<small>Ctrl+S</small></button>'
+            '<button class="shkey" id="shkeyclear" type="button" title="{{i18n:shell.clear}}">{{i18n:shell.clear}}<small>Ctrl+L</small></button>'
+            '<button class="shkey" id="shkeyprev" type="button" title="{{i18n:shell.prev}}">{{i18n:shell.prev}}</button>'
+            '<button class="shkey" id="shkeynext" type="button" title="{{i18n:shell.next}}">{{i18n:shell.next}}</button>'
             '</div>'
             '<div class="shinput"><span class="shprompt">$</span>'
             '<input id="shinput" type="text" autocomplete="off" spellcheck="false" '
-            'placeholder="例如：ls -la · du -sh * · find . -name xxx · cd docs">'
+            'placeholder="{{i18n:shell.placeholder}}">'
             '<span class="shstatus" id="shstatus"></span>'
             '</div>'
             '</div>'
@@ -138,7 +138,7 @@ class ShellMixin:
             'function shChips(host,items){'
             'host.innerHTML="";'
             'if(!items.length){var e=document.createElement("span");e.className="shempty";'
-            'e.textContent="暂无记录";host.appendChild(e);return;}'
+            'e.textContent=I18N["shell.no_records"];host.appendChild(e);return;}'
             'for(var i=0;i<items.length;i++){(function(cmd){'
             'var b=document.createElement("button");b.type="button";b.className="shchip";'
             'b.textContent=cmd;b.title=cmd;'
@@ -173,7 +173,7 @@ class ShellMixin:
             'try{var n=shin.value.length;shin.setSelectionRange(n,n);}catch(e){}}'
             'function shSetBusy(b){SHBUSY=b;shcancel.classList.toggle("active",b);'
             'shkeybtn.classList.toggle("running",b);'
-            'shstatus.textContent=b?"运行中…":"";}'
+            'shstatus.textContent=b?I18N["shell.running"]:"";}'
             'function shClear(){if(SHBUSY)return;shout.textContent="";'
             'SHAUTO=true;SH_SAVED_TOP=0;shUpdateBack();}'
             'function shNearBottom(){return shout.scrollHeight-shout.scrollTop-shout.clientHeight<40;}'
@@ -196,7 +196,7 @@ class ShellMixin:
             'shout.scrollTop+=e.deltaY;e.preventDefault();},{passive:false});'
             'function shCancel(){'
             'if(!SHBUSY)return;'
-            'shstatus.textContent="正在停止…";'
+            'shstatus.textContent=I18N["shell.stopping"];'
             'if(SHTASK){try{fetch("/cmd/cancel",{method:"POST",'
             'headers:{"Content-Type":"application/json"},'
             'body:JSON.stringify({id:SHTASK})}).catch(function(){});}catch(e){}}'
@@ -216,7 +216,7 @@ class ShellMixin:
             'var ct=r.headers.get("Content-Type")||"";'
             'if(ct.indexOf("json")>=0||!r.body){'
             'return r.json().then(function(d){if(d.nav){location.href=d.nav;return;}'
-            'SHAUTO=true;shWrite(d.out||"(无输出)");});}'
+            'SHAUTO=true;shWrite(d.out||I18N["shell.no_output"]);});}'
             'var reader=r.body.getReader(),dec=new TextDecoder(),buf="";'
             'function pump(){return reader.read().then(function(x){'
             'if(x.done)return;'
@@ -226,7 +226,7 @@ class ShellMixin:
             'return pump().then(function(){buf+=dec.decode();shWrite(buf);});'
             '}).catch(function(e){'
             'if(e&&e.name==="AbortError")return;'
-            'shWrite((shout.textContent||"")+"\\n请求失败："+e);'
+            'shWrite((shout.textContent||"")+"\\n"+I18N["shell.request_failed"].replace("{error}",e));'
             '}).then(function(){'
             'if(SHTASK===tid){SHTASK=null;SHCTL=null;shSetBusy(false);}});}'
             'shcancel.onclick=function(){'
@@ -279,6 +279,7 @@ class ShellMixin:
             '</script>'
         )
     def _handle_cmd(self):
+        tr = self._t()
         length = int(self.headers.get('Content-Length', 0) or 0)
         if not length or length > 1024 * 1024:
             self.send_error(400, 'Bad request')
@@ -308,13 +309,13 @@ class ShellMixin:
             t = os.path.join(d, target) if not os.path.isabs(target) else target
             t = os.path.abspath(t)
             if not (t == base or t.startswith(base + os.sep)):
-                resp = {'code': 1, 'out': '路径不在服务目录内'}
+                resp = {'code': 1, 'out': tr('shell.path_outside')}
             elif os.path.isdir(t):
                 rel = t[len(base):].replace(os.sep, '/')
-                resp = {'code': 0, 'out': '已切换目录：' + t,
+                resp = {'code': 0, 'out': tr('shell.changed_dir', dir=t),
                         'nav': '/' + rel.lstrip('/') if rel else '/'}
             else:
-                resp = {'code': 1, 'out': '不是目录：' + t}
+                resp = {'code': 1, 'out': tr('shell.not_dir', dir=t)}
             self._send_json(resp)
             return
 
@@ -327,9 +328,9 @@ class ShellMixin:
         try:
             out, code = self._run_shell(cmd, d, task_id)
         except Exception as e:
-            out, code = '执行失败：' + str(e), 1
+            out, code = tr('shell.exec_failed', error=e), 1
         if len(out) > 200000:
-            out = out[:200000] + '\n…[输出已截断]'
+            out = out[:200000] + '\n' + tr('shell.truncated')
         self._send_json({'code': code, 'out': out})
     def _handle_cmd_cancel(self):
         length = int(self.headers.get('Content-Length', 0) or 0)
@@ -372,6 +373,7 @@ class ShellMixin:
         threading.Thread(target=_escalate_kill, args=(proc,), daemon=True).start()
         return True
     def _run_shell(self, cmd, d, task_id=None):
+        tr = self._t()
         """伪终端执行命令（一次性收集）：不限时长，可用 task_id 取消；剥离 ANSI。"""
         proc, master = self._spawn_shell(cmd, d)
         self._register_cmd(task_id, proc)
@@ -390,10 +392,11 @@ class ShellMixin:
         text = self._fmt(bytes(buf))
         code = proc.returncode if proc.returncode is not None else 0
         if cancelled:
-            text += '\n[已取消]'
+            text += '\n' + tr('shell.cancelled')
             code = 130
         return text, code
     def _stream_cmd(self, cmd, d, task_id=None):
+        tr = self._t()
         """伪终端执行命令（实时流式输出到浏览器）：不限时长，可用 task_id 取消。"""
         proc, master = self._spawn_shell(cmd, d)
         self._register_cmd(task_id, proc)
@@ -423,7 +426,7 @@ class ShellMixin:
                     break
                 emit(data)
                 if total > 800000:
-                    self._chunk('\n[输出量过大，已自动截断]'.encode('utf-8'))
+                    self._chunk(('\n' + tr('shell.output_too_large')).encode('utf-8'))
                     break
             if proc.poll() is not None:
                 self._drain_shell(master, emit)
@@ -439,10 +442,10 @@ class ShellMixin:
             except Exception:
                 pass
         if cancelled:
-            self._chunk('\n[已取消]'.encode('utf-8'))
+            self._chunk(('\n' + tr('shell.cancelled')).encode('utf-8'))
         else:
             code = proc.returncode if proc.returncode is not None else 0
-            self._chunk(('\n[退出码 %d]' % code).encode('utf-8'))
+            self._chunk(('\n' + tr('shell.exit_code', code=code)).encode('utf-8'))
         try:
             self.wfile.write(b'0\r\n\r\n')
             self.wfile.flush()

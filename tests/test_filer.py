@@ -82,7 +82,7 @@ class HttpTest(unittest.TestCase):
 
     def request(self, path, method='GET', body=None, auth=True):
         conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=5)
-        headers = {'Authorization': AUTH} if auth else {}
+        headers = {'Authorization': AUTH, 'Accept-Language': 'zh-CN'} if auth else {'Accept-Language': 'zh-CN'}
         conn.request(method, path, body=body, headers=headers)
         resp = conn.getresponse()
         data = resp.read()
@@ -181,7 +181,7 @@ class HttpTest(unittest.TestCase):
         self.assertIn('hi', obj['out'])
 
     def test_cmd_cancel(self):
-        headers = {'Authorization': AUTH, 'Content-Type': 'application/json'}
+        headers = {'Authorization': AUTH, 'Content-Type': 'application/json', 'Accept-Language': 'zh-CN'}
         conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=10)
         conn.request('POST', '/cmd', body=json.dumps(
             {'cmd': 'echo start; sleep 100; echo never', 'dir': '/',

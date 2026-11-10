@@ -26,6 +26,7 @@ _PDFJS_VIEWER = os.path.join(_ROOT, 'static', 'pdfjs', 'web', 'viewer.html')
 
 class PreviewMixin:
     def _serve_preview(self):
+        t = self._t()
         base = os.path.abspath(self.directory) if hasattr(self, 'directory') else os.getcwd()
         qs = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
         target = qs.get('dir', ['/'])[0] or '/'
@@ -51,7 +52,7 @@ class PreviewMixin:
         if kind is None and _detect_file_encoding(full):
             kind = 'text'
         if kind is None:
-            self._preview_message('该格式暂不支持网页预览，请下载后用本地软件打开。', name, target)
+            self._preview_message(t('preview.unsupported'), name, target)
             return
 
         enc = qs.get('enc', [''])[0].lower()
@@ -92,7 +93,7 @@ class PreviewMixin:
             detected = enc or _detect_encoding(raw) or 'utf-8'
             text = _clip_text(_decode_bytes(raw, detected))
             if truncated:
-                text += '\n\n…[文件过大，仅显示前 2MB]'
+                text += '\n\n' + t('preview.too_large')
             links = ''.join(
                 '<a class="%s" href="/preview?%s">%s</a>' % (
                     'on' if e == detected else '',
@@ -117,8 +118,7 @@ class PreviewMixin:
                         {'dir': target, 'name': name})
                     viewer = ('/pdfjs/web/viewer.html?file='
                               + urllib.parse.quote(pdf_url, safe=''))
-                    note = ('<div class="note">按 PDF 页面显示；目录和超链接可点击，'
-                            '支持翻页/缩放/搜索。首次转换需要几秒。</div>')
+                    note = '<div class="note">' + t('preview.pdf_note') + '</div>'
                     page = (_PDF_PREVIEW_TEMPLATE
                             .replace('{{FILENAME}}', html.escape(name))
                             .replace('{{BACK}}', back)
@@ -131,14 +131,13 @@ class PreviewMixin:
                 if count:
                     limit = min(count, 100)
                     pages = ''.join(
-                        '<img loading="lazy" src="/officepage?%s" alt="第 %d 页">' % (
+                        '<img loading="lazy" src="/officepage?%s" alt="%s">' % (
                             html.escape(urllib.parse.urlencode(
                                 {'dir': target, 'name': name, 'page': i}),
-                                quote=True), i)
+                                quote=True), t('preview.page_alt', page=i))
                         for i in range(1, limit + 1))
-                    more = '（仅显示前 100 页）' if count > limit else ''
-                    note = ('<div class="note">按 PDF 页面显示，表格、图片和排版与原文一致；'
-                            '共 %d 页%s。首次加载每页约 1–2 秒。</div>' % (count, more))
+                    more = (' ' + t('preview.pages_more', limit=100)) if count > limit else ''
+                    note = '<div class="note">' + t('preview.pages_note', count=count, more=more) + '</div>'
                     page = (_PAGES_PREVIEW_TEMPLATE
                             .replace('{{FILENAME}}', html.escape(name))
                             .replace('{{BACK}}', back)
@@ -149,8 +148,7 @@ class PreviewMixin:
                     return
                 pdf_url = '/officepdf?' + urllib.parse.urlencode(
                     {'dir': target, 'name': name})
-                note = ('<div class="note">以 PDF 方式显示，表格、图片和排版与原文一致；'
-                        '首次转换需要几秒。可点“下载”保存原文件。</div>')
+                note = '<div class="note">' + t('preview.pdf_note2') + '</div>'
                 page = (_PDF_PREVIEW_TEMPLATE
                         .replace('{{FILENAME}}', html.escape(name))
                         .replace('{{BACK}}', back)
@@ -164,7 +162,7 @@ class PreviewMixin:
             try:
                 blocks = docx_blocks(full)
             except Exception as e:
-                self._preview_message('无法解析该文档：%s' % e, name, target)
+                self._preview_message(t('preview.parse_failed', error=e), name, target)
                 return
             def media_url(part):
                 q = urllib.parse.urlencode(
@@ -195,15 +193,14 @@ class PreviewMixin:
                             tds.append('<td%s>%s</td>' % (attr, cell_html(cell_blocks)))
                         rows_html.append('<tr>' + ''.join(tds) + '</tr>')
                     body.append('<table>' + ''.join(rows_html) + '</table>')
-            note = ('<div class="note">图片按文档顺序显示；仅支持 .docx 内嵌图片，'
-                    '复杂排版可能简化。需要完整效果请下载。</div>')
+            note = '<div class="note">' + t('preview.docx_note') + '</div>'
             page = (_DOC_PREVIEW_TEMPLATE
                     .replace('{{FILENAME}}', html.escape(name))
                     .replace('{{BACK}}', back)
                     .replace('{{DL}}', html.escape(dl, quote=True))
                     .replace('{{ENC_LINKS}}', '')
                     .replace('{{NOTE}}', note)
-                    .replace('{{BODY}}', ''.join(body) or '<p>（没有可显示的正文）</p>'))
+                    .replace('{{BODY}}', ''.join(body) or ('<p>' + t('preview.empty_body') + '</p>')))
             self._send_text_page(page)
             return
 
@@ -211,10 +208,9 @@ class PreviewMixin:
             try:
                 text = _clip_text(_office_text(full, kind))
             except Exception as e:
-                self._preview_message('无法解析该文档：%s' % e, name, target)
+                self._preview_message(t('preview.parse_failed', error=e), name, target)
                 return
-            note = ('<div class="note">已提取文字内容；排版、图片与表格样式不保留。'
-                    '需要完整效果请下载。</div>')
+            note = '<div class="note">' + t('preview.text_note') + '</div>'
             page = (_TEXT_PREVIEW_TEMPLATE
                     .replace('{{FILENAME}}', html.escape(name))
                     .replace('{{ENC_LINKS}}', '')
@@ -249,7 +245,7 @@ class PreviewMixin:
             self._send_file_bytes(full, 'application/pdf', name)
             return
 
-        self._preview_message('该格式暂不支持网页预览，请下载后用本地软件打开。', name, target)
+        self._preview_message(t('preview.unsupported'), name, target)
     def _send_text_page(self, page):
         page = page.replace('</body>', '<script>' + _TTS_JS + '</script></body>')
         self._send_html(page)
@@ -377,6 +373,7 @@ class PreviewMixin:
             pass
 
     def _send_file_forbidden(self, full, name, target):
+        t = self._t()
         try:
             st = os.stat(full)
             mode = oct(st.st_mode & 0o777)[2:]
@@ -391,22 +388,21 @@ class PreviewMixin:
             user = getpass.getuser()
         except Exception:
             user = '?'
-        msg = ('文件存在，但服务账户「%s」没有读取权限。文件属主：%s，权限：%s。'
-               % (user, owner, mode))
-        hint = ('如果这是 opencode 的配置文件，它通常包含 API Key，'
-                '请不要通过网页预览或下载；可在服务器上用 sudo 查看。')
+        msg = t('preview.permission_message', user=user, owner=owner, mode=mode)
+        hint = t('preview.permission_hint')
+        perm_title = t('preview.permission_title')
         page = ('<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
                 '<meta name="viewport" content="width=device-width,initial-scale=1">'
-                '<title>无法预览</title><style>'
+                '<title>' + perm_title + '</title><style>'
                 'body{font-family:' + FONT_STACK + ';'
                 'background:#f1f5f9;color:#1e293b;padding:24px;}'
                 '.box{max-width:760px;margin:40px auto;background:#fff;'
                 'border-radius:12px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.08);}'
                 'a{color:#2563eb;}'
                 '</style></head><body><div class="box">'
-                '<h2>无法预览：文件无读取权限</h2>'
+                '<h2>' + perm_title + '</h2>'
                 '<p>%s</p><p>%s</p>'
-                '<p><a href="%s">返回目录</a></p>'
+                '<p><a href="%s">' + t('preview.back_dir') + '</a></p>'
                 '</div></body></html>') % (
                     html.escape(msg), html.escape(hint),
                     html.escape(target or '/', quote=True))
@@ -478,6 +474,7 @@ class PreviewMixin:
                 .replace('{{TEXT}}', ''))
         self._send_html(page)
     def _serve_browse(self, fpath, path):
+        t = self._t()
         base = os.path.abspath(self.directory) if hasattr(self, 'directory') else os.getcwd()
         abs_path = os.path.abspath(fpath)
         if not (abs_path == base or abs_path.startswith(base + os.sep)):
@@ -507,23 +504,24 @@ class PreviewMixin:
         if kind:
             prev = ('<a class="btn btn-prev" href="/preview?'
                     + urllib.parse.urlencode({'dir': dir_disp, 'name': name_disp})
-                    + '" title="预览">' + _ICON_PREVIEW + '</a>')
+                    + '" title="' + t('preview.preview_title') + '">' + _ICON_PREVIEW + '</a>')
 
-        dl = '<a class="btn btn-dl" href="' + url_path + '?dl=1" title="下载">' + _ICON_DL + '</a>'
+        dl = '<a class="btn btn-dl" href="' + url_path + '?dl=1" title="' + t('common.download') + '">' + _ICON_DL + '</a>'
 
         info_btn = (
-            f'<button class="btn btn-info" type="button" title="更多信息 {fname}" '
+            f'<button class="btn btn-info" type="button" title="{html.escape(t("preview.more_info", name=name_disp), quote=True)}" '
             f'data-dir="{html.escape(dir_disp, quote=True)}" '
             f'data-name="{html.escape(name_disp, quote=True)}" onclick="showInfo(this)">' + _ICON_INFO + '</button>'
         )
 
-        confirmed = html.escape(f"确定删除「{name_disp}」吗？此操作不可恢复。", quote=True)
+        confirmed = html.escape(t("preview.delete_confirm", name=name_disp), quote=True)
+        delete_title = html.escape(t('common.delete'), quote=True)
         delete_form = (
             f'<form class="act-form" action="/delete" method="post" '
             f'onsubmit="return confirm(\'{confirmed}\')">'
             f'<input type="hidden" name="dir" value="{html.escape(dir_disp, quote=True)}">'
             f'<input type="hidden" name="name" value="{html.escape(name_disp, quote=True)}">'
-            f'<button class="btn btn-del" type="submit" title="删除">' + _ICON_DEL + '</button></form>'
+            f'<button class="btn btn-del" type="submit" title="{delete_title}">' + _ICON_DEL + '</button></form>'
         )
 
         page = _BROWSE_TEMPLATE \

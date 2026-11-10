@@ -10,6 +10,8 @@ import threading
 import xml.etree.ElementTree as ET
 import zipfile
 
+from .i18n import translate as _t
+
 from .cfb import _cfb_streams
 from .config import _MAX_ZIP_UNCOMPRESSED
 
@@ -34,7 +36,7 @@ def _zip_open(path):
     z = zipfile.ZipFile(path)
     if sum(i.file_size for i in z.infolist()) > _MAX_ZIP_UNCOMPRESSED:
         z.close()
-        raise ValueError('压缩内容过大')
+        raise ValueError(_t('error.office.zip_too_large'))
     return z
 
 
@@ -215,7 +217,7 @@ def _pptx_text(path):
         slides.sort(key=lambda x: int(re.search(r'(\d+)\.xml$', x).group(1)))
         out = []
         for idx, slide in enumerate(slides, 1):
-            out.append('【第 %d 页】' % idx)
+            out.append(_t('error.office.page_marker', n=idx))
             root = ET.fromstring(z.read(slide))
             for node in root.iter():
                 if _local(node.tag) == 't' and node.text:
@@ -258,10 +260,10 @@ def _doc_text(path):
     get = _cfb_streams(data)
     wd = get('WordDocument')
     if not wd or len(wd) < 0x01AA:
-        raise ValueError('缺少 WordDocument 流')
+        raise ValueError(_t('error.office.missing_word_stream'))
     flags = struct.unpack_from('<H', wd, 0x0A)[0]
     if flags & 0x0100:
-        raise ValueError('文档已加密')
+        raise ValueError(_t('error.office.encrypted'))
     table = get('1Table' if (flags & 0x0200) else '0Table')
     if table is None:
         table = get('1Table') or get('0Table') or b''
@@ -309,7 +311,7 @@ def _doc_text(path):
     fc_mac = struct.unpack_from('<I', wd, 0x1C)[0]
     if 0 < fc_min < fc_mac <= len(wd):
         return _clean_doc_text(wd[fc_min:fc_mac].decode('gb18030', 'replace'))
-    raise ValueError('无法定位正文')
+    raise ValueError(_t('error.office.body_not_found'))
 
 
 def _office_text(path, kind):
@@ -323,7 +325,7 @@ def _office_text(path, kind):
         return _doc_text(path)
     if kind == 'rtf':
         return _rtf_text(path)
-    raise ValueError('不支持的类型')
+    raise ValueError(_t('error.office.unsupported'))
 
 
 def _soffice():

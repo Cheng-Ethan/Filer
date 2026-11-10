@@ -5,7 +5,7 @@ _PREVIEW_TEMPLATE = r'''<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Markdown 预览</title>
+<title>{{i18n:preview.markdown_title}}</title>
 <style>
 *{box-sizing:border-box;}
 body{margin:0;font-family:''' + FONT_STACK + r''';background:#f1f5f9;color:#1e293b;}
@@ -113,7 +113,7 @@ function renderMarkdown(src){
   flushP();
   return html;
 }
-function toggleRaw(){var raw=document.getElementById('raw');var md=document.getElementById('md');var on=raw.style.display==='block';raw.style.display=on?'none':'block';md.style.display=on?'block':'none';document.getElementById('tog').textContent=on?'查看原文':'查看预览';}
+function toggleRaw(){var raw=document.getElementById('raw');var md=document.getElementById('md');var on=raw.style.display==='block';raw.style.display=on?'none':'block';md.style.display=on?'block':'none';document.getElementById('tog').textContent=on?I18N["preview.view_raw"]:I18N["preview.view_preview"];}
 window.addEventListener('DOMContentLoaded',function(){document.getElementById('md').innerHTML=renderMarkdown(MD_RAW);});
 </script>
 </head>
@@ -122,21 +122,21 @@ window.addEventListener('DOMContentLoaded',function(){document.getElementById('m
 <div class="topbar">
   <span class="ttl" title="{{FILENAME}}">🧾 {{FILENAME}}</span>
   <div class="topacts">
-    <a class="btn" href="{{BACK}}">返回</a>
-    <a class="btn" href="{{DL}}" title="下载原文件（不要用浏览器保存预览页，否则会得到 .html）">下载</a>
-    <button class="btn" id="tog" onclick="toggleRaw()">查看原文</button>
-  </div>
+    <a class="btn" href="{{BACK}}">{{i18n:common.back}}</a>
+    <a class="btn" href="{{DL}}" title="{{i18n:preview.download_title}}">{{i18n:common.download}}</a>
+    <button class="btn" id="tog" onclick="toggleRaw()">{{i18n:preview.view_raw}}</button>
+  </div>{{LANGSEL}}
 </div>
 <div class="toolbar">
   <div class="trow">
     <div id="ttsGroup" hidden>
-      <button class="tbtn primary" id="ttsBtn" type="button" title="边读边生成，不会预先生成整篇">朗读全文</button>
-      <button class="tbtn" id="ttsStop" type="button">停止</button>
+      <button class="tbtn primary" id="ttsBtn" type="button" title="{{i18n:preview.read_aloud}}">{{i18n:preview.read_aloud}}</button>
+      <button class="tbtn" id="ttsStop" type="button">{{i18n:preview.stop}}</button>
     </div>
     <details class="tset" id="ttsSettings" hidden>
-      <summary class="tbtn">朗读设置</summary>
+      <summary class="tbtn">{{i18n:preview.read_settings}}</summary>
       <div class="tsetbody">
-        <label class="tfield">语速
+        <label class="tfield">{{i18n:preview.speed}}
           <select class="tsel" id="ttsRate">
             <option value="0.75">0.75x</option>
             <option value="1" selected>1.0x</option>
@@ -145,10 +145,10 @@ window.addEventListener('DOMContentLoaded',function(){document.getElementById('m
             <option value="2">2.0x</option>
           </select>
         </label>
-        <label class="tfield">音色
+        <label class="tfield">{{i18n:preview.voice}}
           <select class="tsel" id="ttsVoice"></select>
         </label>
-        <label class="tfield">音量
+        <label class="tfield">{{i18n:preview.volume}}
           <input type="range" id="ttsVol" class="tvol" min="0" max="100" value="100">
         </label>
       </div>
@@ -230,20 +230,20 @@ pre{margin:0;padding:18px 20px;white-space:pre-wrap;word-break:break-word;font-f
 <div class="topbar">
   <span class="ttl" title="{{FILENAME}}">{{FILENAME}}</span>
   <div class="topacts">
-    <a class="btn" href="{{BACK}}">返回</a>
-    <a class="btn" href="{{DL}}" title="下载原文件（不要用浏览器保存预览页，否则会得到 .html）">下载</a>
-  </div>
+    <a class="btn" href="{{BACK}}">{{i18n:common.back}}</a>
+    <a class="btn" href="{{DL}}" title="{{i18n:preview.download_title}}">{{i18n:common.download}}</a>
+  </div>{{LANGSEL}}
 </div>
 <div class="toolbar">
   <div class="trow">
     <div id="ttsGroup" hidden>
-      <button class="tbtn primary" id="ttsBtn" type="button" title="边读边生成，不会预先生成整篇">朗读全文</button>
-      <button class="tbtn" id="ttsStop" type="button">停止</button>
+      <button class="tbtn primary" id="ttsBtn" type="button" title="{{i18n:preview.read_aloud}}">{{i18n:preview.read_aloud}}</button>
+      <button class="tbtn" id="ttsStop" type="button">{{i18n:preview.stop}}</button>
     </div>
     <details class="tset" id="ttsSettings" hidden>
-      <summary class="tbtn">朗读设置</summary>
+      <summary class="tbtn">{{i18n:preview.read_settings}}</summary>
       <div class="tsetbody">
-        <label class="tfield">语速
+        <label class="tfield">{{i18n:preview.speed}}
           <select class="tsel" id="ttsRate">
             <option value="0.75">0.75x</option>
             <option value="1" selected>1.0x</option>
@@ -252,16 +252,16 @@ pre{margin:0;padding:18px 20px;white-space:pre-wrap;word-break:break-word;font-f
             <option value="2">2.0x</option>
           </select>
         </label>
-        <label class="tfield">音色
+        <label class="tfield">{{i18n:preview.voice}}
           <select class="tsel" id="ttsVoice"></select>
         </label>
-        <label class="tfield">音量
+        <label class="tfield">{{i18n:preview.volume}}
           <input type="range" id="ttsVol" class="tvol" min="0" max="100" value="100">
         </label>
       </div>
     </details>
     <details class="tset tenc">
-      <summary class="tbtn">编码</summary>
+      <summary class="tbtn">{{i18n:preview.encoding}}</summary>
       <div class="tsetbody"><span class="enc">{{ENC_LINKS}}</span></div>
     </details>
     <span class="tstate" id="ttsState"></span>
@@ -276,7 +276,7 @@ pre{margin:0;padding:18px 20px;white-space:pre-wrap;word-break:break-word;font-f
 
 
 _ENC_BLOCK = """    <details class="tset tenc">
-      <summary class="tbtn">编码</summary>
+      <summary class="tbtn">{{i18n:preview.encoding}}</summary>
       <div class="tsetbody"><span class="enc">{{ENC_LINKS}}</span></div>
     </details>"""
 
@@ -301,7 +301,7 @@ _ARTICLE_TEMPLATE = _TEXT_PREVIEW_TEMPLATE.replace(
 ).replace(
     '<div class="wrap"><pre id="ttsSource">{{TEXT}}</pre></div>',
     '<div class="article" id="ttsSource">{{BODY}}</div>'
-).replace('>下载<', '>原文<').replace('</style>', '''.article{max-width:900px;margin:16px auto 40px;background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:24px 28px;line-height:1.85;font-size:16px;}
+).replace('>{{i18n:common.download}}<', '>{{i18n:preview.original}}<').replace('</style>', '''.article{max-width:900px;margin:16px auto 40px;background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:24px 28px;line-height:1.85;font-size:16px;}
 .article .atitle{font-size:24px;line-height:1.4;margin:0 0 10px;color:#0f172a;}
 .article .ameta{font-size:13px;color:#64748b;margin:0 0 20px;word-break:break-all;}
 .article .acontent p{margin:0 0 .9em;word-break:break-word;}
@@ -357,8 +357,8 @@ body{margin:0;font-family:''' + FONT_STACK + r''';background:#0f172a;color:#e2e8
 <body>
 <div class="topbar">
   <span class="ttl">{{FILENAME}}</span>
-  <a class="btn" href="{{BACK}}">← 返回上一页</a>
-  <a class="btn" href="{{DL}}" title="下载原文件（不要用浏览器保存预览页，否则会得到 .html）">下载</a>
+  <a class="btn" href="{{BACK}}">{{i18n:preview.back_previous}}</a>
+  <a class="btn" href="{{DL}}" title="{{i18n:preview.download_title}}">{{i18n:common.download}}</a>
 </div>
 <div class="frame">{{BODY}}</div>
 </body>
@@ -385,7 +385,7 @@ _TTS_JS = (
     'try{localStorage.setItem("dls_tts_volume",volEl.value);}catch(e){}};}'
     'function setState(s){if(state){state.textContent=s||"";state.title=s||"";}}'
     'function fname(){try{return new URLSearchParams(location.search).get("name")||"filer";}catch(e){return "filer";}}'
-    'var zhVoice={"zh-CN-XiaoxiaoNeural":"晓晓","zh-CN-XiaoyiNeural":"晓伊","zh-CN-YunxiNeural":"云希","zh-CN-YunjianNeural":"云健","zh-CN-YunxiaNeural":"云夏","zh-CN-YunyangNeural":"云扬","zh-HK-HiuGaaiNeural":"晓佳","zh-HK-HiuMaanNeural":"晓曼","zh-HK-WanLungNeural":"云龙","zh-TW-HsiaoChenNeural":"晓臻","zh-TW-HsiaoYuNeural":"晓雨","zh-TW-YunJheNeural":"云哲"};'
+    'var zhVoice={"zh-CN-XiaoxiaoNeural":I18N["voice.xiaoxiao"],"zh-CN-XiaoyiNeural":I18N["voice.xiaoyi"],"zh-CN-YunxiNeural":I18N["voice.yunxi"],"zh-CN-YunjianNeural":I18N["voice.yunjian"],"zh-CN-YunxiaNeural":I18N["voice.yunxia"],"zh-CN-YunyangNeural":I18N["voice.yunyang"],"zh-HK-HiuGaaiNeural":I18N["voice.hiugaai"],"zh-HK-HiuMaanNeural":I18N["voice.hiumaan"],"zh-HK-WanLungNeural":I18N["voice.wanlung"],"zh-TW-HsiaoChenNeural":I18N["voice.hsiaochen"],"zh-TW-HsiaoYuNeural":I18N["voice.hsiaoyu"],"zh-TW-YunJheNeural":I18N["voice.yunjhe"]};'
     'function shortVoice(id,name){if(zhVoice[id])return zhVoice[id];'
     'var s=(name||id||"").replace(/^Microsoft\\s+/,"").replace(/\\s*\\(.*$/,"");'
     'return s.length>10?s.slice(0,10):s;}'
@@ -401,24 +401,24 @@ _TTS_JS = (
     'return "/tts?"+p.toString();}'
     'function reset(){try{audio.pause();}catch(e){}'
     'audio.removeAttribute("src");audio.load();lastUrl="";'
-    'btn.textContent="朗读全文";setState("");}'
+    'btn.textContent=I18N["preview.read_aloud"];setState("");}'
     'function playIt(){'
     'if(!ready)return;'
     'var u=url();'
     'if(u!==lastUrl){lastUrl=u;audio.src=u;}'
-    'setState("生成中…");'
+    'setState(I18N["preview.generating"]);'
     'var pr=audio.play();'
     'if(pr&&pr.catch)pr.catch(function(e){'
-    'if(e&&e.name==="AbortError"){setState("");btn.textContent="朗读全文";return;}'
-    'setState("播放失败："+(e.message||e));btn.textContent="朗读全文";});}'
+    'if(e&&e.name==="AbortError"){setState("");btn.textContent=I18N["preview.read_aloud"];return;}'
+    'setState(I18N["preview.play_failed"]+" "+(e.message||e));btn.textContent=I18N["preview.read_aloud"];});}'
     'btn.onclick=function(){'
     'if(!ready)return;'
     'if(!audio.src||audio.ended){playIt();return;}'
     'if(audio.paused){playIt();}else{audio.pause();}};'
     'stop.onclick=function(){reset();};'
-    'audio.addEventListener("waiting",function(){setState("生成中…");});'
+    'audio.addEventListener("waiting",function(){setState(I18N["preview.generating"]);});'
     'audio.addEventListener("playing",function(){'
-    'btn.textContent="暂停";setState("朗读中");'
+    'btn.textContent=I18N["preview.pause"];setState(I18N["preview.playing"]);'
     'if("mediaSession" in navigator){try{'
     'navigator.mediaSession.metadata=new MediaMetadata({title:fname(),artist:"filer"});'
     'navigator.mediaSession.setActionHandler("play",function(){audio.play();});'
@@ -426,10 +426,10 @@ _TTS_JS = (
     'navigator.mediaSession.setActionHandler("stop",function(){reset();});'
     '}catch(e){}}});'
     'audio.addEventListener("pause",function(){if(audio.ended)return;'
-    'btn.textContent="继续朗读";setState("已暂停");});'
-    'audio.addEventListener("ended",function(){btn.textContent="朗读全文";setState("");lastUrl="";});'
+    'btn.textContent=I18N["preview.resume"];setState(I18N["preview.paused"]);});'
+    'audio.addEventListener("ended",function(){btn.textContent=I18N[\'preview.read_aloud\'];setState("");lastUrl="";});'
     'audio.addEventListener("error",function(){if(!lastUrl)return;'
-    'btn.textContent="朗读全文";setState("生成失败");});'
+    'btn.textContent=I18N["preview.read_aloud"];setState(I18N["preview.generation_failed"]);});'
     'if(rateSel)rateSel.onchange=function(){'
     'rate=parseFloat(rateSel.value)||1;'
     'try{localStorage.setItem("dls_tts_rate",String(rate));}catch(e){}'
@@ -441,14 +441,14 @@ _TTS_JS = (
     'fetch("/tts/voices",{headers:{"Accept":"application/json"}})'
     '.then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json();})'
     '.then(function(j){'
-    'if(!j||!j.ok)throw new Error((j&&j.error)||"语音服务不可用");'
+    'if(!j||!j.ok)throw new Error((j&&j.error)||I18N["preview.voice_service_unavailable"]);'
     'if(voiceSel){voiceSel.innerHTML="";'
     'var list=j.voices||[];'
     'for(var i=0;i<list.length;i++){var o=document.createElement("option");'
     'o.value=list[i].id;o.textContent=shortVoice(list[i].id,list[i].name);o.title=list[i].name||list[i].id;'
     'voiceSel.appendChild(o);}'
     'if(!list.length){var o2=document.createElement("option");'
-    'o2.value=j.default||"";o2.textContent="默认音色";voiceSel.appendChild(o2);}'
+    'o2.value=j.default||"";o2.textContent=I18N["preview.default_voice"];voiceSel.appendChild(o2);}'
     'if(voice){voiceSel.value=voice;if(voiceSel.value!==voice)voiceSel.value=j.default||"";}'
     'else if(j.default){voiceSel.value=j.default;}'
     'voice=voiceSel.value||"";}'
@@ -456,7 +456,7 @@ _TTS_JS = (
     'ready=true;setState("");'
     '})'
     '.catch(function(e){ready=false;if(settingsEl)settingsEl.hidden=true;'
-    'setState("语音不可用："+(e.message||e));'
+    'setState(I18N["preview.voice_unavailable"]+" "+(e.message||e));'
     'btn.disabled=true;if(stop)stop.disabled=true;});'
     '})();'
 )
@@ -467,7 +467,7 @@ _BROWSE_TEMPLATE = '''<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{FILENAME}} - filer</title>
+<title>{{FILENAME}} - {{i18n:app.title}}</title>
 <style>
 *{box-sizing:border-box;}
 body{margin:0;font-family:''' + FONT_STACK + ''';background:#f1f5f9;color:#1e293b;}
@@ -497,7 +497,7 @@ iframe{width:100%;height:100%;border:0;background:#fff;display:block;}
 <div class="topbar">
   <span class="ttl">📄 {{FILENAME}}</span>
   <div class="mid">
-    <a class="btn" href="{{FALLBACK}}" onclick="if(history.length&gt;1){event.preventDefault();history.back();return false;}">← 返回上一页</a>
+    <a class="btn" href="{{FALLBACK}}" onclick="if(history.length&gt;1){event.preventDefault();history.back();return false;}">{{i18n:preview.back_previous}}</a>
     <div class="actions">{{ACTION_PREVIEW}}{{ACTION_DOWNLOAD}}{{ACTION_DELETE}}</div>
   </div>
 </div>
@@ -552,16 +552,16 @@ _INFO_CSS = (
 _INFO_MODAL = (
     '<div class="infomodal" id="infoModal" hidden>'
     '<div class="infocard">'
-    '<div class="infohead">📋 文件信息<button class="info-close" id="infoClose" type="button" title="关闭">✕</button></div>'
+    '<div class="infohead">📋 {{i18n:dialog.info.title}}<button class="info-close" id="infoClose" type="button" title="{{i18n:common.close}}">✕</button></div>'
     '<div>'
-    '<div class="info-row"><span class="ik">名称</span><span class="iv" id="iv_name"></span></div>'
-    '<div class="info-row"><span class="ik">位置</span><span class="iv" id="iv_dir"></span></div>'
-    '<div class="info-row"><span class="ik">类型</span><span class="iv" id="iv_type"></span></div>'
-    '<div class="info-row"><span class="ik">大小</span><span class="iv" id="iv_size"></span></div>'
-    '<div class="info-row"><span class="ik">修改时间</span><span class="iv" id="iv_mtime"></span></div>'
-    '<div class="info-row"><span class="ik">创建时间</span><span class="iv" id="iv_ctime"></span></div>'
-    '<div class="info-row"><span class="ik">权限</span><span class="iv" id="iv_perm"></span></div>'
-    '<div class="info-row"><span class="ik">存取</span><span class="iv" id="iv_rw"></span></div>'
+    '<div class="info-row"><span class="ik">{{i18n:dialog.info.name}}</span><span class="iv" id="iv_name"></span></div>'
+    '<div class="info-row"><span class="ik">{{i18n:dialog.info.location}}</span><span class="iv" id="iv_dir"></span></div>'
+    '<div class="info-row"><span class="ik">{{i18n:dialog.info.type}}</span><span class="iv" id="iv_type"></span></div>'
+    '<div class="info-row"><span class="ik">{{i18n:dialog.info.size}}</span><span class="iv" id="iv_size"></span></div>'
+    '<div class="info-row"><span class="ik">{{i18n:dialog.info.mtime}}</span><span class="iv" id="iv_mtime"></span></div>'
+    '<div class="info-row"><span class="ik">{{i18n:dialog.info.ctime}}</span><span class="iv" id="iv_ctime"></span></div>'
+    '<div class="info-row"><span class="ik">{{i18n:dialog.info.permissions}}</span><span class="iv" id="iv_perm"></span></div>'
+    '<div class="info-row"><span class="ik">{{i18n:dialog.info.access}}</span><span class="iv" id="iv_rw"></span></div>'
     '</div></div></div>'
 )
 _INFO_JS = (
@@ -574,17 +574,17 @@ _INFO_JS = (
     'fetch("/info?"+new URLSearchParams({dir:dir,name:name}),{headers:{Accept:"application/json"}})'
     '.then(function(r){return r.json();})'
     '.then(function(j){'
-    'if(!j||!j.ok){alert((j&&j.error)||"获取文件信息失败");return;}'
+    'if(!j||!j.ok){alert((j&&j.error)||I18N["dialog.info.fetch_failed"]);return;}'
     'document.getElementById("iv_name").textContent=j.name;'
     'document.getElementById("iv_dir").textContent=j.dir;'
     'document.getElementById("iv_type").textContent=j["type"];'
-    'document.getElementById("iv_size").textContent=j.size_human+"（"+j.size+" 字节）";'
+    'document.getElementById("iv_size").textContent=I18N["dialog.info.size_value"].replace("{human}",j.size_human).replace("{n}",j.size);'
     'document.getElementById("iv_mtime").textContent=j.mtime;'
     'document.getElementById("iv_ctime").textContent=j.ctime;'
     'document.getElementById("iv_perm").textContent=j.perm+"（"+j.perm_str+"）";'
-    'document.getElementById("iv_rw").textContent=(j.readable?"可读":"不可读")+"、"+(j.writable?"可写":"不可写");'
+    'document.getElementById("iv_rw").textContent=I18N["dialog.info.access_value"].replace("{r}",j.readable?I18N["dialog.info.readable"]:I18N["dialog.info.unreadable"]).replace("{w}",j.writable?I18N["dialog.info.writable"]:I18N["dialog.info.unwritable"]);'
     'infoModal.hidden=false;'
-    '}).catch(function(e){alert("请求失败："+e);});'
+    '}).catch(function(e){alert(I18N["dialog.info.request_failed"].replace("{error}",e));});'
     '}'
 )
 

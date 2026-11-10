@@ -5,6 +5,7 @@ from http.server import SimpleHTTPRequestHandler
 from .article import ArticleMixin
 from .auth import AuthMixin
 from .files import FilesMixin
+from .i18n import resolve_lang, set_current_lang
 from .preview import PreviewMixin
 from .response import ResponseMixin
 from .shell import ShellMixin
@@ -17,6 +18,7 @@ class ForceDownloadHandler(AuthMixin, FilesMixin, PreviewMixin, TtsMixin,
     def do_POST(self):
         if not self.require_auth():
             return
+        set_current_lang(resolve_lang(self))
         path = urllib.parse.urlsplit(self.path).path
         if path == '/delete':
             self._handle_delete()
@@ -31,6 +33,7 @@ class ForceDownloadHandler(AuthMixin, FilesMixin, PreviewMixin, TtsMixin,
     def do_GET(self):
         if not self.require_auth():
             return
+        set_current_lang(resolve_lang(self))
         parts = urllib.parse.urlsplit(self.path)
         path = parts.path
         if path == '/read':

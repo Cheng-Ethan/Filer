@@ -11,6 +11,7 @@ import urllib.parse
 
 from .config import (FORCE_DOWNLOAD_EXTS, MAX_UPLOAD_BYTES, MAX_RECENT_DIRS,
                      _preview_kind)
+from .i18n import get_translator, render_page, resolve_lang
 from .templates import (_BROWSE_TEMPLATE, _ICON_DEL, _ICON_DL, _ICON_HELP,
                         _ICON_INFO, _ICON_OPEN, _ICON_PREVIEW, _INFO_CSS,
                         _INFO_JS, _INFO_MODAL)
@@ -31,6 +32,8 @@ def _dir_has_children(path):
 
 
 class FilesMixin:
+    def _t(self):
+        return get_translator(resolve_lang(self))
     def forced_download(self):
         """Return download filename if this request must be a download, else None."""
         raw, _, qs = self.path.partition('?')
@@ -105,10 +108,11 @@ class FilesMixin:
         self._record_recent_dir()
 
         rows = []
+        t = self._t()
         parent = posixpath.dirname(self.path.rstrip('/')) if self.path not in ('/', '') else ''
         parent = '/' if parent in ('', '/') else parent + '/'
         if self.path not in ('/', ''):
-            rows.append(self._row_link(parent, '../', '📁', '返回上级目录',
+            rows.append(self._row_link(parent, '../', '📁', t('list.parent'),
                                        open_label=None, can_dl=False))
 
         # 排序：目录在前、文件在后，各自按名称排序
@@ -126,7 +130,7 @@ class FilesMixin:
                                            posixpath.join(path, name))))
         for name in files:
             rows.append(self._row_link(urllib.parse.quote(name), name, '📄', name,
-                                       open_label='👁 打开',
+                                       open_label='👁 ' + t('common.open'),
                                        preview=bool(_preview_kind(name)),
                                            delete=True,
                                            dirname=self.path, name=name))
@@ -134,7 +138,7 @@ class FilesMixin:
         body = (
             '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            '<title>filer</title>'
+            '<title>{{i18n:app.title}}</title>'
             '<style>'
             '*{box-sizing:border-box;}'
             'body{font-family:' + FONT_STACK + ';margin:0;padding:24px 24px 64px;background:#f1f5f9;color:#1e293b;}'
@@ -240,30 +244,31 @@ class FilesMixin:
             '</style></head><body><div class="box">'
             '<div class="navbar">'
             f'<a class="btn btn-back" href="{html.escape(parent, quote=True)}" '
-            'onclick="if(history.length&gt;1){event.preventDefault();history.back();return false;}">← 返回上一页</a>'
-            f'<h1>📁 目录 /{html.escape(urllib.parse.unquote(self.path), quote=True)}</h1>'
-            '<button class="btn helpbtn" id="helpbtn" type="button" title="图标图例">' + _ICON_HELP + '</button>'
+            'onclick="if(history.length&gt;1){event.preventDefault();history.back();return false;}">{{i18n:preview.back_previous}}</a>'
+            + '<h1>📁 ' + t('list.directory_title', path=html.escape(urllib.parse.unquote(self.path), quote=True)) + '</h1>'
+            '<button class="btn helpbtn" id="helpbtn" type="button" title="{{i18n:list.legend_title}}">' + _ICON_HELP + '</button>'
+            '{{LANGSEL}}'
             '<div class="legend" id="legend" hidden>'
-            '<span class="lg-item">' + _ICON_OPEN + '<span>打开（进入查看）</span></span>'
-            '<span class="lg-item">' + _ICON_PREVIEW + '<span>预览（文本 / Markdown / Office 等）</span></span>'
-            '<span class="lg-item">' + _ICON_DL + '<span>下载</span></span>'
-            '<span class="lg-item lg-del">' + _ICON_DEL + '<span>删除</span></span>'
-            '<span class="lg-item lg-info">' + _ICON_INFO + '<span>更多信息（文件属性）</span></span>'
-            '<span class="lg-item"><span style="font-size:18px;color:#64748b;line-height:1">⋮</span><span>显示/隐藏操作按钮</span></span>'
-            '<span class="lg-item"><span style="color:#16a34a">● 绿色名称 = 目录，点击即进入</span></span>'
+            '<span class="lg-item">' + _ICON_OPEN + '<span>{{i18n:list.legend_open}}</span></span>'
+            '<span class="lg-item">' + _ICON_PREVIEW + '<span>{{i18n:list.legend_preview}}</span></span>'
+            '<span class="lg-item">' + _ICON_DL + '<span>{{i18n:list.legend_download}}</span></span>'
+            '<span class="lg-item lg-del">' + _ICON_DEL + '<span>{{i18n:list.legend_delete}}</span></span>'
+            '<span class="lg-item lg-info">' + _ICON_INFO + '<span>{{i18n:list.legend_info}}</span></span>'
+            '<span class="lg-item"><span style="font-size:18px;color:#64748b;line-height:1">⋮</span><span>{{i18n:list.legend_actions}}</span></span>'
+            '<span class="lg-item"><span style="color:#16a34a">● {{i18n:list.legend_dir_hint}}</span></span>'
             '</div>'
             '</div>'
             + self._recent_html()
             + '<form class="readbar" action="/read" method="get">'
-            '<input type="url" name="url" placeholder="粘贴文章链接（微信公众号/网页），用本机语音朗读" required>'
-            '<button class="btn btn-open" type="submit">读文章</button>'
+            '<input type="url" name="url" placeholder="{{i18n:list.read_placeholder}}" required>'
+            '<button class="btn btn-open" type="submit">{{i18n:toolbar.read_article}}</button>'
             '</form>'
             + '<form action="/upload" method="post" enctype="multipart/form-data" class="upbar">'
             f'<input type="hidden" name="dir" value="{html.escape(urllib.parse.unquote(self.path), quote=True)}">'
             '<input type="file" name="file" multiple required>'
-            '<button class="btn btn-up" type="submit">⬆ 上传到当前目录</button>'
+            '<button class="btn btn-up" type="submit">{{i18n:toolbar.upload}}</button>'
             '</form>'
-            '<div class="upnote">选中一个或多个文件后点击上传，文件将保存到当前目录。</div>'
+            '<div class="upnote">{{i18n:list.upload_note}}</div>'
             + ''.join(rows)
             + '</div>'
             + self._shell_html(os.path.abspath(path))
@@ -285,7 +290,9 @@ class FilesMixin:
             + '</body></html>'
         )
         body = body.replace('<style>', '<style>' + BASE_CSS, 1)
-        self.wfile.write(body.replace('</body>', _INFO_MODAL + '<script>' + _INFO_JS + '</script></body>').encode('utf-8'))
+        body = body.replace('</body>', _INFO_MODAL + '<script>' + _INFO_JS + '</script></body>')
+        body = render_page(body, resolve_lang(self))
+        self.wfile.write(body.encode('utf-8'))
         return None
     def _record_recent_dir(self):
         key = '/' if self.path in ('', '/') else '/' + self.path.strip('/')
@@ -294,6 +301,7 @@ class FilesMixin:
                 _RECENT_DIRS.remove(key)
             _RECENT_DIRS.append(key)
     def _recent_html(self):
+        t = self._t()
         cur = '/' if self.path in ('', '/') else '/' + self.path.strip('/')
         with _RECENT_LOCK:
             entries = list(_RECENT_DIRS)
@@ -307,40 +315,44 @@ class FilesMixin:
                          f'{html.escape(disp)}</a>')
         if not links:
             return ''
-        return ('<div class="recent">🕘 最近访问： '
+        return ('<div class="recent">🕘 ' + t('list.recent')
                 + ' <span class="sep">·</span> '.join(links) + '</div>')
-    def _row_link(self, href, label, icon, title, open_label='👁 打开',
+    def _row_link(self, href, label, icon, title, open_label=None,
                   can_dl=True, dl_href=None, preview=False, delete=False,
                   dirname=None, name=None, row_cls='', dir_nonempty=False):
-        title_esc = html.escape(title, quote=True)
+        t = self._t()
+        open_title = html.escape(t('list.open_title', name=title), quote=True)
         name_html = (f'<a class="name" href="{html.escape(href, quote=True)}" '
-                     f'title="打开 {title_esc}">{html.escape(label)}</a>')
+                     f'title="{open_title}">{html.escape(label)}</a>')
         btns = []
         if open_label:
             btns.append(f'<a class="btn btn-open" href="{html.escape(href, quote=True)}" '
-                        f'title="打开 {title_esc}">{_ICON_OPEN}</a>')
+                        f'title="{open_title}">{_ICON_OPEN}</a>')
         if preview:
             p = '/preview?' + urllib.parse.urlencode(
                 {'dir': urllib.parse.unquote(dirname or '/'), 'name': urllib.parse.unquote(name or '')})
-            btns.append(f'<a class="btn btn-prev" href="{html.escape(p, quote=True)}" title="渲染预览 {title_esc}">{_ICON_PREVIEW}</a>')
+            preview_title = html.escape(t('list.preview_title', name=title), quote=True)
+            btns.append(f'<a class="btn btn-prev" href="{html.escape(p, quote=True)}" title="{preview_title}">{_ICON_PREVIEW}</a>')
         if can_dl:
             if dl_href is None:
                 dl_href = href + ('&' if '?' in href else '?') + 'dl=1'
-            btns.append(f'<a class="btn btn-dl" href="{html.escape(dl_href, quote=True)}" title="下载 {title_esc}">{_ICON_DL}</a>')
+            download_title = html.escape(t('list.download_title', name=title), quote=True)
+            btns.append(f'<a class="btn btn-dl" href="{html.escape(dl_href, quote=True)}" title="{download_title}">{_ICON_DL}</a>')
         if delete:
             is_dir = row_cls == 'row-dir' or label.endswith('/')
             if is_dir and dir_nonempty:
-                msg = (f"目录「{label}」中包含文件或子目录。"
-                       "删除后其中的所有内容会被一并删除，且不可恢复。确定删除整个目录吗？")
+                msg = t('dialog.delete.dir_body', name=label)
             elif is_dir:
-                msg = f"确定删除空目录「{label}」吗？此操作不可恢复。"
+                msg = t('dialog.delete.empty_dir_body', name=label)
             else:
-                msg = f"确定删除文件「{label}」吗？此操作不可恢复。"
+                msg = t('dialog.delete.file_body', name=label)
             confirm_attr = html.escape(
                 'return confirm(%s)' % json.dumps(msg, ensure_ascii=False),
                 quote=True)
+            info_title = html.escape(t('list.info_title', name=title), quote=True)
+            delete_title = html.escape(t('list.delete_title', name=title), quote=True)
             btns.append(
-                f'<button class="btn btn-info" type="button" title="更多信息 {title_esc}" '
+                f'<button class="btn btn-info" type="button" title="{info_title}" '
                 f'data-dir="{html.escape(urllib.parse.unquote(dirname or "/"), quote=True)}" '
                 f'data-name="{html.escape(name or "", quote=True)}" onclick="showInfo(this)">{_ICON_INFO}</button>'
             )
@@ -349,10 +361,11 @@ class FilesMixin:
                 f'onsubmit="{confirm_attr}">'
                 f'<input type="hidden" name="dir" value="{html.escape(urllib.parse.unquote(dirname or "/"), quote=True)}">'
                 f'<input type="hidden" name="name" value="{html.escape(name or "", quote=True)}">'
-                f'<button class="btn btn-del" type="submit" title="删除 {title_esc}">{_ICON_DEL}</button></form>'
+                f'<button class="btn btn-del" type="submit" title="{delete_title}">{_ICON_DEL}</button></form>'
             )
         row_attr = f' class="row {row_cls}"' if row_cls else ' class="row"'
-        rowsmark = (f'<button class="rowsmark" type="button" title="显示操作按钮">⋮</button>' if btns else '')
+        rowsmark_title = html.escape(t('list.show_actions_title'), quote=True)
+        rowsmark = (f'<button class="rowsmark" type="button" title="{rowsmark_title}">⋮</button>' if btns else '')
         parts = [f'<div{row_attr}>',
                  f'<div class="line1"><span class="icon">{icon}</span>{name_html}{rowsmark}</div>']
         if btns:
@@ -496,11 +509,12 @@ class FilesMixin:
         tri = lambda v: ('r' if v & 4 else '-') + ('w' if v & 2 else '-') + ('x' if v & 1 else '-')
         perm_str = tri((mode >> 6) & 7) + tri((mode >> 3) & 7) + tri(mode & 7)
         fmt_time = lambda ts: datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        t = self._t()
         ext = os.path.splitext(name)[1].lower()
         if is_dir:
-            typ = '目录'
+            typ = t('list.type_dir')
         else:
-            typ = '文件' + (f'（{ext.upper()}）' if ext else '（无后缀）')
+            typ = t('list.type_file_ext', ext=ext.upper()) if ext else t('list.type_file_no_ext')
         obj = {
             'ok': True,
             'name': name,

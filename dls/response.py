@@ -2,6 +2,8 @@ import json
 import os
 import urllib.parse
 
+from .i18n import render_page, resolve_lang
+
 
 class ResponseMixin:
     def _send_json(self, obj, status=200):
@@ -13,6 +15,7 @@ class ResponseMixin:
         self.end_headers()
         self.wfile.write(body)
     def _send_html(self, page):
+        page = render_page(page, resolve_lang(self))
         body = page.encode('utf-8')
         self.send_response(200)
         self.send_header('Content-Type', 'text/html; charset=utf-8')

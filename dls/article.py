@@ -31,21 +31,28 @@ _ALLOWED = {
 _VOID = {'br', 'img', 'hr'}
 
 
+class ArticleError(Exception):
+    def __init__(self, key, **kwargs):
+        super().__init__(key)
+        self.key = key
+        self.kwargs = kwargs
+
+
 def _validate_url(url):
     parts = urllib.parse.urlsplit(url)
     if parts.scheme not in ('http', 'https') or not parts.hostname:
-        raise ValueError('只支持 http/https 公开链接')
+        raise ArticleError('article.internal_only')
     if parts.port and parts.port not in (80, 443):
-        raise ValueError('只支持 80/443 端口')
+        raise ArticleError('article.bad_port')
     try:
         infos = socket.getaddrinfo(parts.hostname, parts.port or 443)
     except OSError:
-        raise ValueError('域名无法解析')
+        raise ArticleError('article.dns_failed')
     for info in infos:
         ip = ipaddress.ip_address(info[4][0])
         if (ip.is_private or ip.is_loopback or ip.is_link_local
                 or ip.is_reserved or ip.is_multicast or ip.is_unspecified):
-            raise ValueError('不允许访问内网地址')
+            raise ArticleError('article.private_address')
     return url
 
 
@@ -66,7 +73,7 @@ def _fetch(url, referer=None, max_bytes=_MAX_BYTES, timeout=20):
     with opener.open(req, timeout=timeout) as resp:
         data = resp.read(max_bytes + 1)
         if len(data) > max_bytes:
-            raise ValueError('内容过大')
+            raise ArticleError('article.content_too_large')
         return data, resp.headers.get('Content-Type', ''), resp.geturl()
 
 
@@ -244,9 +251,9 @@ def _extract_globol_detail(page):
 def fetch_article(url):
     url = (url or '').strip()
     if not url:
-        raise ValueError('请输入文章链接')
+        raise ArticleError('article.missing_url')
     if len(url) > 2000:
-        raise ValueError('链接过长')
+        raise ArticleError('article.link_too_long')
     _validate_url(url)
     os.makedirs(_CACHE, exist_ok=True)
     key = hashlib.sha256(url.encode('utf-8')).hexdigest()
@@ -267,7 +274,7 @@ def fetch_article(url):
                 return json.load(f)
         raise
     if 'html' not in (ctype or '').lower() and b'<html' not in data[:4096].lower():
-        raise ValueError('目标不是网页')
+        raise ArticleError('article.not_webpage')
     page = data.decode('utf-8', 'replace')
     detail = _extract_globol_detail(page)
     embed_html = ''
@@ -280,7 +287,7 @@ def fetch_article(url):
         parser.feed(page)
     text = re.sub(r'\s+', ' ', ''.join(parser.texts)).strip()
     if not parser.found or not text:
-        raise ValueError('未能识别文章正文（可能需要登录，或页面结构不支持）')
+        raise ArticleError('article.no_content')
     detail_title = detail.get('title') if isinstance(detail, dict) else ''
     detail_source = detail.get('source') if isinstance(detail, dict) else ''
     article = {
@@ -328,7 +335,7 @@ def fetch_image(url):
         data, ctype, _ = _fetch(url, max_bytes=_MAX_IMG, timeout=20)
     main = (ctype or '').split(';')[0].lower()
     if not main.startswith('image/'):
-        raise ValueError('目标不是图片')
+        raise ArticleError('article.not_image')
     ext = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/gif': '.gif',
            'image/webp': '.webp', 'image/bmp': '.bmp'}.get(main, '.img')
     os.makedirs(_IMG_CACHE, exist_ok=True)
@@ -340,6 +347,7 @@ def fetch_image(url):
 
 class ArticleMixin:
     def _serve_read(self):
+        t = self._t()
         qs = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
         url = qs.get('url', [''])[0].strip()
         if not url:
@@ -351,28 +359,32 @@ class ArticleMixin:
                 'input[type=url]{width:70%;height:var(--h-ctl);padding:0 var(--px-ctl);'
                 'font-size:var(--font-ui);border-radius:var(--radius);box-sizing:border-box}'
                 '</style><body>'
-                '<h2>读文章</h2><form action="/read" method="get">'
+                '<h2>{{i18n:article.read_title}}</h2><form action="/read" method="get">'
                 '<input name="url" type="url" '
-                'placeholder="粘贴公众号或网页文章链接" required> '
-                '<button class="btn" type="submit">读取</button></form>'
-                '<p><a href="/">返回文件列表</a></p></body>')
+                'placeholder="{{i18n:article.url_placeholder}}" required> '
+                '<button class="btn" type="submit">{{i18n:article.read_button}}</button></form>'
+                '<p><a href="/">{{i18n:article.back_to_list}}</a></p></body>')
             return
         try:
             article = fetch_article(url)
         except Exception as e:
+            if isinstance(e, ArticleError):
+                err = t(e.key, **e.kwargs)
+            else:
+                err = str(e)
             self._send_html((
                 '<!DOCTYPE html><meta charset="utf-8"><meta name="viewport" '
                 'content="width=device-width,initial-scale=1">'
                 '<style>' + BASE_CSS +
                 'body{font-family:' + FONT_STACK + ';padding:24px}'
                 '</style><body>'
-                '<h2>读取失败</h2><p>%s</p><p><a href="/read?url=%s">重试</a> · '
-                '<a href="/">返回文件列表</a></p></body>'
-                ) % (html.escape(str(e)), html.escape(urllib.parse.quote(url))))
+                '<h2>{{i18n:article.read_failed}}</h2><p>%s</p><p><a href="/read?url=%s">{{i18n:common.retry}}</a> · '
+                '<a href="/">{{i18n:article.back_to_list}}</a></p></body>'
+                ) % (html.escape(err), html.escape(urllib.parse.quote(url))))
             return
-        title = html.escape(article.get('title') or '未命名文章')
+        title = html.escape(article.get('title') or t('article.untitled'))
         author = html.escape(article.get('author') or '')
-        meta = ' · '.join(x for x in (author, '来源：' + html.escape(article.get('final', ''))) if x)
+        meta = ' · '.join(x for x in (author, t('article.source', source=html.escape(article.get('final', '')))) if x)
         body = ('<h1 class="atitle">%s</h1><div class="ameta">%s</div>'
                 '<div class="acontent">%s</div>' % (title, meta, article.get('html', '')))
         tts_url = '/article/tts?' + urllib.parse.urlencode({'url': url})
@@ -411,16 +423,21 @@ class ArticleMixin:
         self.wfile.write(data)
 
     def _serve_article_tts(self):
+        t = self._t()
         qs = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
         url = qs.get('url', [''])[0]
         if not url:
-            self._send_json({'ok': False, 'error': '缺少文章链接'}, status=400)
+            self._send_json({'ok': False, 'error': t('article.missing_link')}, status=400)
             return
         try:
             article = fetch_article(url)
             path = article_text_file(article)
         except Exception as e:
-            self._send_json({'ok': False, 'error': str(e)}, status=400)
+            if isinstance(e, ArticleError):
+                msg = t(e.key, **e.kwargs)
+            else:
+                msg = str(e)
+            self._send_json({'ok': False, 'error': msg}, status=400)
             return
         try:
             rate = float(qs.get('rate', ['1'])[0])
