@@ -112,6 +112,15 @@ class HttpTest(unittest.TestCase):
         server.assert_not_called()
         return stderr.getvalue()
 
+    def test_version(self):
+        stdout = io.StringIO()
+        with mock.patch.object(sys, 'argv', ['filer.py', '--version']), \
+                contextlib.redirect_stdout(stdout):
+            with self.assertRaises(SystemExit) as cm:
+                filer.main()
+        self.assertEqual(cm.exception.code, 0)
+        self.assertIn('0.1.0', stdout.getvalue())
+
     def test_missing_user_refuses_start(self):
         err = self._run_main(['filer.py'])
         self.assertIn('DL_AUTH', err)

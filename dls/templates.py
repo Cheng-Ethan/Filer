@@ -25,7 +25,7 @@ button{font:inherit;}
 .btn:hover{background:#334155;}
 @media(max-width:640px){.btn{flex:1 1 96px;}}
 .box{max-width:820px;margin:24px auto;background:#fff;padding:28px 32px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);line-height:1.7;}
-#raw{white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Consolas,monospace;font-size:13px;background:#f8fafc;border-radius:8px;padding:16px;display:none;margin:24px auto;max-width:820px;}
+#raw{white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#0f172a;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:16px;display:none;margin:24px auto;max-width:820px;}
 h1,h2,h3,h4{line-height:1.35;margin:1.2em 0 .5em;}
 h1{border-bottom:2px solid #e2e8f0;padding-bottom:.3em;font-size:26px;}
 h2{border-bottom:1px solid #eef2f7;padding-bottom:.25em;font-size:21px;}
@@ -44,14 +44,17 @@ ul,ol{padding-left:1.6em;}
 pre::-webkit-scrollbar{height:8px;}
 @media(max-width:640px){.box{margin:12px;padding:18px;}#raw{margin:12px;}}
 .topacts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:0;}
-.topacts .btn{flex:0 0 auto;}
-.topbar{padding:6px 12px;gap:8px;flex-wrap:nowrap;}
+.topacts .btn{flex:0 0 auto;min-width:var(--h-ctl);}
+.topacts .btn-edit{background:#0f766e;border-color:#0f766e;color:#fff;}
+.topacts .btn-edit:hover{background:#115e59;}
+.topacts #tog{min-width:6.5em;}
+.topbar{padding:6px 12px;gap:8px;flex-wrap:wrap;}
 .topbar .ttl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;margin-right:0;flex:1 1 auto;}
 .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 12px;background:#fff;border-bottom:1px solid #e2e8f0;}
 .trow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;}
 #ttsGroup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 #ttsGroup[hidden]{display:none !important;}
-.tbtn{width:5.75em;height:var(--h-ctl);padding:0 10px;border-radius:var(--radius);border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:var(--font-ui);cursor:pointer;}
+.tbtn{min-width:5.75em;height:var(--h-ctl);padding:0 10px;border-radius:var(--radius);border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:var(--font-ui);cursor:pointer;white-space:nowrap;}
 .tbtn:hover{background:#eef2f7;}
 .tbtn.primary{background:#0f766e;color:#fff;border-color:#0f766e;}
 .tbtn.primary:hover{background:#115e59;}
@@ -75,11 +78,28 @@ pre::-webkit-scrollbar{height:8px;}
 @media(max-width:640px){.topbar{padding:6px 8px;}.toolbar{padding:6px 8px;gap:6px;}.tstate{flex:1 1 100%;white-space:normal;overflow:visible;}#ttsSettings .tsetbody{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}#ttsSettings .tfield{display:flex;flex-direction:column;align-items:stretch;gap:4px;font-size:12px;min-width:0;}.tfield select{width:100%;max-width:none;min-width:0;}.tvol{width:100%;}}</style>
 <script>
 const MD_RAW = {{MD_TEXT}};
+const MD_BASE = {{MD_BASE}};
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escAttr(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+function absUrl(raw){
+  var u=raw.replace(/&amp;/g,'&');
+  if(/^(?:[a-z][a-z0-9+.-]*:|\/|#)/i.test(u))return u;
+  try{var x=new URL(u,location.origin+(MD_BASE||'/') );return x.pathname+x.search+x.hash;}catch(e){return u;}
+}
+function imgUrl(raw){
+  var u=absUrl(raw);
+  if(/^(?:data:|https?:|mailto:)/i.test(u)||u.indexOf('//')===0)return u;
+  if(u.indexOf('raw=1')>=0)return u;
+  return escAttr(u+(u.indexOf('?')>=0?'&':'?')+'raw=1');
+}
+function linkUrl(raw){
+  var u=absUrl(raw);
+  return escAttr(u);
+}
 function inline(t){
   t = esc(t);
-  t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g,'<img src="$2" alt="$1">');
-  t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g,function(m,alt,src){return '<img src="'+imgUrl(src)+'" alt="'+alt+'">';});
+  t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,function(m,label,url){return '<a href="'+linkUrl(url)+'" target="_blank" rel="noopener">'+label+'</a>';});
   t = t.replace(/`([^`]*)`/g,'<code>$1</code>');
   t = t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
   t = t.replace(/__([^_]+)__/g,'<strong>$1</strong>');
@@ -124,6 +144,7 @@ window.addEventListener('DOMContentLoaded',function(){document.getElementById('m
   <div class="topacts">
     <a class="btn" href="{{BACK}}">{{i18n:common.back}}</a>
     <a class="btn" href="{{DL}}" title="{{i18n:preview.download_title}}">{{i18n:common.download}}</a>
+    {{EDIT}}
     <button class="btn" id="tog" onclick="toggleRaw()">{{i18n:preview.view_raw}}</button>
   </div>{{LANGSEL}}
 </div>
@@ -195,14 +216,17 @@ pre{margin:0;padding:18px 20px;white-space:pre-wrap;word-break:break-word;font-f
 .enc a.on{background:#1e40af;color:#fff;border-color:#1e40af;}
 @media(max-width:640px){.btn{flex:1 1 96px;}.wrap{margin:10px;}.tbtn,.tsel{flex:1 1 auto;}}
 .topacts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:0;}
-.topacts .btn{flex:0 0 auto;}
-.topbar{padding:6px 12px;gap:8px;flex-wrap:nowrap;}
+.topacts .btn{flex:0 0 auto;min-width:var(--h-ctl);}
+.topacts .btn-edit{background:#0f766e;border-color:#0f766e;color:#fff;}
+.topacts .btn-edit:hover{background:#115e59;}
+.topacts #tog{min-width:6.5em;}
+.topbar{padding:6px 12px;gap:8px;flex-wrap:wrap;}
 .topbar .ttl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;margin-right:0;flex:1 1 auto;}
 .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 12px;background:#fff;border-bottom:1px solid #e2e8f0;}
 .trow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;}
 #ttsGroup{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 #ttsGroup[hidden]{display:none !important;}
-.tbtn{width:5.75em;height:var(--h-ctl);padding:0 10px;border-radius:var(--radius);border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:var(--font-ui);cursor:pointer;}
+.tbtn{min-width:5.75em;height:var(--h-ctl);padding:0 10px;border-radius:var(--radius);border:1px solid #cbd5e1;background:#f8fafc;color:#334155;font-size:var(--font-ui);cursor:pointer;white-space:nowrap;}
 .tbtn:hover{background:#eef2f7;}
 .tbtn.primary{background:#0f766e;color:#fff;border-color:#0f766e;}
 .tbtn.primary:hover{background:#115e59;}
@@ -232,6 +256,7 @@ pre{margin:0;padding:18px 20px;white-space:pre-wrap;word-break:break-word;font-f
   <div class="topacts">
     <a class="btn" href="{{BACK}}">{{i18n:common.back}}</a>
     <a class="btn" href="{{DL}}" title="{{i18n:preview.download_title}}">{{i18n:common.download}}</a>
+    {{EDIT}}
   </div>{{LANGSEL}}
 </div>
 <div class="toolbar">
@@ -359,8 +384,51 @@ body{margin:0;font-family:''' + FONT_STACK + r''';background:#0f172a;color:#e2e8
   <span class="ttl">{{FILENAME}}</span>
   <a class="btn" href="{{BACK}}">{{i18n:preview.back_previous}}</a>
   <a class="btn" href="{{DL}}" title="{{i18n:preview.download_title}}">{{i18n:common.download}}</a>
+  {{EDIT}}
 </div>
 <div class="frame">{{BODY}}</div>
+</body>
+</html>'''
+
+
+_EDIT_TEMPLATE = r'''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{FILENAME}}</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;font-family:''' + FONT_STACK + r''';background:#f1f5f9;color:#1e293b;}
+.topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#0f172a;color:#e2e8f0;padding:8px 14px;}
+.topbar .ttl{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto;}
+.topacts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:var(--h-ctl);padding:0 var(--px-ctl);border-radius:var(--radius);font-size:var(--font-ui);border:1px solid #475569;color:#e2e8f0;background:#1e293b;text-decoration:none;cursor:pointer;box-sizing:border-box;white-space:nowrap;}
+.btn:hover{background:#334155;}
+.btn-save{background:#0f766e;border-color:#0f766e;color:#fff;}
+.btn-save:hover{background:#115e59;}
+.editwrap{max-width:1100px;margin:16px auto 40px;padding:0 12px;}
+.editform{display:flex;flex-direction:column;gap:10px;}
+.edittoolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.editfield{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;}
+.editnote{font-size:12px;color:#64748b;flex:1 1 220px;min-width:0;}
+.editarea{width:100%;min-height:calc(100vh - 190px);resize:vertical;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#0f172a;padding:16px 18px;font-family:ui-monospace,Consolas,Menlo,monospace;font-size:13px;line-height:1.6;tab-size:4;box-shadow:0 2px 10px rgba(0,0,0,.06);}
+.editarea:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.12);}
+.edit-error{max-width:1100px;margin:12px auto 0;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#991b1b;font-size:13px;}
+@media(max-width:640px){.topbar{padding:6px 8px;}.editwrap{margin:8px auto 20px;padding:0 8px;}.editarea{min-height:calc(100vh - 230px);padding:12px;}.edittoolbar .btn{flex:1 1 auto;}}
+</style>
+{{EDIT_HEAD}}
+</head>
+<body>
+<div class="topbar">
+  <span class="ttl" title="{{FILENAME}}">{{FILENAME}}</span>
+  <div class="topacts">
+    <a class="btn" href="{{BACK}}">{{i18n:edit.back_preview}}</a>
+    <a class="btn" href="{{DL}}" title="{{i18n:preview.download_title}}">{{i18n:common.download}}</a>
+  </div>{{LANGSEL}}
+</div>
+{{NOTE}}
+<div class="editwrap">{{BODY}}</div>
 </body>
 </html>'''
 
@@ -513,6 +581,9 @@ _ICON_OPEN = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 _ICON_PREVIEW = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
                  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
                  '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>')
+_ICON_EDIT = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+              'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+              '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>')
 _ICON_DL = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
             'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
             '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
@@ -594,7 +665,7 @@ _BROWSE_TEMPLATE = _BROWSE_TEMPLATE.replace('{{INFO_CSS}}', _INFO_CSS)
 for _name in (
     '_PREVIEW_TEMPLATE', '_TEXT_PREVIEW_TEMPLATE', '_DOC_PREVIEW_TEMPLATE',
     '_ARTICLE_TEMPLATE', '_PDF_PREVIEW_TEMPLATE', '_PAGES_PREVIEW_TEMPLATE',
-    '_WRAP_TEMPLATE', '_BROWSE_TEMPLATE',
+    '_WRAP_TEMPLATE', '_EDIT_TEMPLATE', '_BROWSE_TEMPLATE',
 ):
     _tpl = globals()[_name].replace('<style>', '<style>' + BASE_CSS, 1)
     globals()[_name] = _tpl

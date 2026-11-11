@@ -4,17 +4,20 @@ from http.server import SimpleHTTPRequestHandler
 
 from .article import ArticleMixin
 from .auth import AuthMixin
+from .editor import EditorMixin
 from .files import FilesMixin
 from .i18n import resolve_lang, set_current_lang
+from .plugins import PluginsMixin
 from .preview import PreviewMixin
+from .providers import REGISTRY
 from .response import ResponseMixin
 from .shell import ShellMixin
 from .tts import TtsMixin
 
 
-class ForceDownloadHandler(AuthMixin, FilesMixin, PreviewMixin, TtsMixin,
-                           ArticleMixin, ShellMixin, ResponseMixin,
-                           SimpleHTTPRequestHandler):
+class ForceDownloadHandler(AuthMixin, FilesMixin, PreviewMixin, EditorMixin,
+                           TtsMixin, ArticleMixin, ShellMixin, PluginsMixin,
+                           ResponseMixin, SimpleHTTPRequestHandler):
     def do_POST(self):
         if not self.require_auth():
             return
@@ -22,6 +25,8 @@ class ForceDownloadHandler(AuthMixin, FilesMixin, PreviewMixin, TtsMixin,
         path = urllib.parse.urlsplit(self.path).path
         if path == '/delete':
             self._handle_delete()
+        elif path == '/edit':
+            self._handle_edit()
         elif path == '/upload':
             self._handle_upload()
         elif path == '/cmd':
@@ -29,7 +34,11 @@ class ForceDownloadHandler(AuthMixin, FilesMixin, PreviewMixin, TtsMixin,
         elif path == '/cmd/cancel':
             self._handle_cmd_cancel()
         else:
-            self.send_error(404, 'Not found')
+            route = REGISTRY.match_route('POST', path)
+            if route:
+                self._serve_plugin_route(route)
+            else:
+                self.send_error(404, 'Not found')
     def do_GET(self):
         if not self.require_auth():
             return
@@ -56,6 +65,17 @@ class ForceDownloadHandler(AuthMixin, FilesMixin, PreviewMixin, TtsMixin,
             return
         if path == '/docmedia':
             self._serve_docmedia()
+            return
+        if path == '/edit':
+            self._serve_edit()
+            return
+        match = REGISTRY.match_static(path)
+        if match:
+            self._serve_plugin_static(match)
+            return
+        route = REGISTRY.match_route('GET', path)
+        if route:
+            self._serve_plugin_route(route)
             return
         if path == '/tts/voices':
             self._serve_tts_voices()

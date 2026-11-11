@@ -1,0 +1,12 @@
+{
+  "id": "todo-editor",
+  "name": "Todo editor",
+  "version": "0.1.0",
+  "api_version": 1,
+  "entry": "plugin.py",
+  "enabled": true,
+  "requires": {
+    "python": ">=3.10",
+    "packages": []
+  }
+}

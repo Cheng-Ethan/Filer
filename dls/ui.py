@@ -36,5 +36,6 @@ input[type=text], input[type=search], input[type=password], select{
 
 FONT_STACK = (
     'system-ui,-apple-system,"Segoe UI","PingFang SC",'
-    '"Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif'
+    '"Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",'
+    '"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif'
 )

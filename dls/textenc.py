@@ -80,3 +80,55 @@ def _clip_text(text, limit=_MAX_PREVIEW_CHARS):
     if len(text) > limit:
         return text[:limit] + '\n\n…[内容过大，已截断]'
     return text
+
+
+def _bom_for(raw, enc):
+    """Return the BOM bytes to keep when writing ``raw`` back as ``enc``."""
+    if not raw:
+        return b''
+    for bom, bom_enc in _BOMS:
+        if raw.startswith(bom):
+            if bom_enc == enc:
+                return bom
+            if enc == 'utf-8' and bom_enc == 'utf-8-sig':
+                return bom
+            return b''
+    return b''
+
+
+def _encoding_for_write(enc):
+    return 'utf-8' if enc == 'utf-8-sig' else (enc or 'utf-8')
+
+
+def _detect_newline(raw):
+    if b'\r\n' in raw:
+        return '\r\n'
+    if b'\r' in raw:
+        return '\r'
+    return '\n'
+
+
+def _normalize_newlines(text):
+    return text.replace('\r\n', '\n').replace('\r', '\n')
+
+
+def _encode_text(text, enc, bom=b'', newline='\n'):
+    base = _encoding_for_write(enc)
+    text = _normalize_newlines(text)
+    if newline != '\n':
+        text = text.replace('\n', newline)
+    return bom + text.encode(base)
+
+
+def _looks_text_strict(raw):
+    """Conservative text check used before allowing an unknown file to be edited."""
+    if not raw or b'\x00' in raw:
+        return None
+    enc = _detect_encoding(raw)
+    if enc is None:
+        return None
+    text = _decode_bytes(raw, enc)
+    ctrl = sum(1 for ch in text if ord(ch) < 32 and ch not in '\r\n\t\f')
+    if ctrl > max(1, len(text) // 100):
+        return None
+    return enc

@@ -17,7 +17,8 @@
     "preview": "Preview",
     "info": "Info",
     "cancel": "Cancel",
-    "ok": "OK"
+    "ok": "OK",
+    "edit": "Edit"
   },
   "toolbar": {
     "read_article": "Read article",
@@ -48,7 +49,9 @@
     "upload_note": "Select one or more files, then click upload. Files are saved to the current directory.",
     "legend_title": "Icon legend",
     "type_file_ext": "File ({ext})",
-    "type_file_no_ext": "File (no extension)"
+    "type_file_no_ext": "File (no extension)",
+    "edit_title": "Edit {name}",
+    "legend_edit": "Edit (text files and plugins)"
   },
   "dialog": {
     "delete": {
@@ -198,5 +201,19 @@
     "hsiaochen": "HsiaoChen",
     "hsiaoyu": "HsiaoYu",
     "yunjhe": "YunJhe"
+  },
+  "edit": {
+    "title": "Edit file",
+    "edit_title": "Edit {name}",
+    "back_preview": "Back to preview",
+    "save": "Save",
+    "encoding": "Encoding",
+    "note": "Saving keeps a backup under cache/edit-backups. If the file changed on disk, the save is rejected.",
+    "unsupported": "This file cannot be edited in the browser.",
+    "conflict": "The file changed on disk after you opened it. Reload and try again.",
+    "too_large": "The file is too large to edit (limit: 2 MiB).",
+    "not_text": "This file does not look like text and cannot be edited.",
+    "read_failed": "Cannot read the file.",
+    "symlink": "Symbolic links cannot be edited."
   }
 }

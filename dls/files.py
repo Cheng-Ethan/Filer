@@ -12,9 +12,10 @@ import urllib.parse
 from .config import (FORCE_DOWNLOAD_EXTS, MAX_UPLOAD_BYTES, MAX_RECENT_DIRS,
                      _preview_kind)
 from .i18n import get_translator, render_page, resolve_lang
-from .templates import (_BROWSE_TEMPLATE, _ICON_DEL, _ICON_DL, _ICON_HELP,
-                        _ICON_INFO, _ICON_OPEN, _ICON_PREVIEW, _INFO_CSS,
-                        _INFO_JS, _INFO_MODAL)
+from .providers import REGISTRY
+from .templates import (_BROWSE_TEMPLATE, _ICON_DEL, _ICON_DL, _ICON_EDIT,
+                        _ICON_HELP, _ICON_INFO, _ICON_OPEN, _ICON_PREVIEW,
+                        _INFO_CSS, _INFO_JS, _INFO_MODAL)
 from .textenc import _charset_for, _detect_file_encoding
 from .ui import BASE_CSS, FONT_STACK
 from .util import _fmt_size
@@ -103,6 +104,7 @@ class FilesMixin:
 
         self.send_response(200)
         self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Cache-Control', 'no-store')
         self.end_headers()
 
         self._record_recent_dir()
@@ -129,11 +131,13 @@ class FilesMixin:
                                        dir_nonempty=_dir_has_children(
                                            posixpath.join(path, name))))
         for name in files:
+            full = posixpath.join(path, name)
             rows.append(self._row_link(urllib.parse.quote(name), name, '📄', name,
                                        open_label='👁 ' + t('common.open'),
                                        preview=bool(_preview_kind(name)),
-                                           delete=True,
-                                           dirname=self.path, name=name))
+                                       edit=self._can_edit(name, full),
+                                       delete=True,
+                                       dirname=self.path, name=name))
 
         body = (
             '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
@@ -174,6 +178,8 @@ class FilesMixin:
             '.btn-dl:hover{background:#fef3c7;}'
             '.btn-prev{color:#7c3aed;background:#f5f3ff;border-color:#ddd6fe;}'
             '.btn-prev:hover{background:#ede9fe;}'
+            '.btn-edit{color:#0f766e;background:#f0fdfa;border-color:#99f6e4;}'
+            '.btn-edit:hover{background:#ccfbf1;}'
             '.btn-del{color:#b91c1c;background:#fef2f2;border-color:#fecaca;}'
             '.btn-del:hover{background:#fee2e2;}'
             '.btn-back{color:#334155;}'
@@ -251,6 +257,7 @@ class FilesMixin:
             '<div class="legend" id="legend" hidden>'
             '<span class="lg-item">' + _ICON_OPEN + '<span>{{i18n:list.legend_open}}</span></span>'
             '<span class="lg-item">' + _ICON_PREVIEW + '<span>{{i18n:list.legend_preview}}</span></span>'
+            '<span class="lg-item">' + _ICON_EDIT + '<span>{{i18n:list.legend_edit}}</span></span>'
             '<span class="lg-item">' + _ICON_DL + '<span>{{i18n:list.legend_download}}</span></span>'
             '<span class="lg-item lg-del">' + _ICON_DEL + '<span>{{i18n:list.legend_delete}}</span></span>'
             '<span class="lg-item lg-info">' + _ICON_INFO + '<span>{{i18n:list.legend_info}}</span></span>'
@@ -317,9 +324,16 @@ class FilesMixin:
             return ''
         return ('<div class="recent">🕘 ' + t('list.recent')
                 + ' <span class="sep">·</span> '.join(links) + '</div>')
+    def _can_edit(self, name, full):
+        try:
+            provider = REGISTRY.find_editor(name, full)
+            return bool(provider and provider.can_edit(full))
+        except Exception:
+            return False
     def _row_link(self, href, label, icon, title, open_label=None,
-                  can_dl=True, dl_href=None, preview=False, delete=False,
-                  dirname=None, name=None, row_cls='', dir_nonempty=False):
+                  can_dl=True, dl_href=None, preview=False, edit=False,
+                  delete=False, dirname=None, name=None, row_cls='',
+                  dir_nonempty=False):
         t = self._t()
         open_title = html.escape(t('list.open_title', name=title), quote=True)
         name_html = (f'<a class="name" href="{html.escape(href, quote=True)}" '
@@ -333,6 +347,11 @@ class FilesMixin:
                 {'dir': urllib.parse.unquote(dirname or '/'), 'name': urllib.parse.unquote(name or '')})
             preview_title = html.escape(t('list.preview_title', name=title), quote=True)
             btns.append(f'<a class="btn btn-prev" href="{html.escape(p, quote=True)}" title="{preview_title}">{_ICON_PREVIEW}</a>')
+        if edit:
+            e = '/edit?' + urllib.parse.urlencode(
+                {'dir': urllib.parse.unquote(dirname or '/'), 'name': urllib.parse.unquote(name or '')})
+            edit_title = html.escape(t('edit.edit_title', name=title), quote=True)
+            btns.append(f'<a class="btn btn-edit" href="{html.escape(e, quote=True)}" title="{edit_title}">{_ICON_EDIT}</a>')
         if can_dl:
             if dl_href is None:
                 dl_href = href + ('&' if '?' in href else '?') + 'dl=1'
@@ -372,7 +391,7 @@ class FilesMixin:
             parts.append(f'<div class="line2"><div class="actions">{"".join(btns)}</div></div>')
         parts.append('</div>')
         return ''.join(parts)
-    def _parse_multipart(self):
+    def _parse_multipart(self, limit=MAX_UPLOAD_BYTES):
         """Parse a multipart/form-data request body into a dict of field -> {name, filename, content}."""
         ctype = self.headers.get('Content-Type', '')
         m = re.search(r'boundary=(?:"([^"]+)"|([^;]+))', ctype)
@@ -380,7 +399,7 @@ class FilesMixin:
             return None
         boundary = (m.group(1) or m.group(2)).encode('utf-8')
         length = int(self.headers.get('Content-Length', 0) or 0)
-        if length <= 0 or length > MAX_UPLOAD_BYTES:
+        if length <= 0 or length > limit:
             return None
         body = self.rfile.read(length)
 
@@ -402,9 +421,9 @@ class FilesMixin:
                 'content': content,
             }
         return fields
-    def _parse_urlencoded(self):
+    def _parse_urlencoded(self, limit=MAX_UPLOAD_BYTES):
         length = int(self.headers.get('Content-Length', 0) or 0)
-        if length <= 0 or length > MAX_UPLOAD_BYTES:
+        if length <= 0 or length > limit:
             return None
         body = self.rfile.read(length).decode('utf-8', 'replace')
         fields = {}

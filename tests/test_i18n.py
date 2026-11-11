@@ -15,7 +15,34 @@ def _load(code):
         return json.load(f)
 
 
+def _locale_codes():
+    return sorted(name[:-5] for name in os.listdir(_LOCALES)
+                  if name.endswith('.json'))
+
+
 class I18nFilesTest(unittest.TestCase):
+    def test_validator_reports_no_errors(self):
+        self.assertEqual(i18n.validate_locales(), [])
+
+    def test_all_locales_against_en(self):
+        en = i18n.flatten(_load('en'))
+        for code in _locale_codes():
+            data = _load(code)
+            meta = data.get('_meta', {})
+            self.assertEqual(meta.get('code'), code)
+            for field in ('name', 'code', 'dir'):
+                self.assertTrue(meta.get(field), '%s: %s' % (code, field))
+            flat = i18n.flatten(data)
+            self.assertEqual(set(flat), set(en), code)
+            for key, value in flat.items():
+                self.assertTrue(value, '%s: %s' % (code, key))
+                self.assertEqual(value, value.strip(), '%s: %s' % (code, key))
+                self.assertEqual(set(_PLACEHOLDER.findall(value)),
+                                 set(_PLACEHOLDER.findall(en[key])),
+                                 '%s: %s' % (code, key))
+                if code != 'en' and key not in {'app.title'}:
+                    self.assertNotEqual(value, en[key], '%s: %s' % (code, key))
+
     def test_en_meta(self):
         data = _load('en')
         self.assertEqual(data['_meta']['name'], 'English')

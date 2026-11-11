@@ -8,6 +8,7 @@ _DEFAULT_LANG = 'en'
 _CURRENT_LANG = contextvars.ContextVar('filer_lang', default=_DEFAULT_LANG)
 _CACHE = {}
 _SUPPORTED = None
+_PLUGIN_LOCALES = {}
 
 
 def _locale_path(code):
@@ -77,15 +78,40 @@ def flatten(data, prefix=''):
     return out
 
 
+def register_plugin_locale(plugin_id, directory):
+    """Merge a plugin locale directory under the ``plugin.<id>.*`` namespace."""
+    try:
+        names = sorted(os.listdir(directory))
+    except OSError:
+        return
+    for name in names:
+        if not name.endswith('.json'):
+            continue
+        code = name[:-5]
+        try:
+            with open(os.path.join(directory, name), encoding='utf-8') as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            continue
+        target = _PLUGIN_LOCALES.setdefault(code, {})
+        for key, value in flatten(data).items():
+            target['plugin.%s.%s' % (plugin_id, key)] = value
+
+
 def get_translator(lang):
     base = flatten(_load_locale(_DEFAULT_LANG))
     data = flatten(_load_locale(lang))
-    fallback = base
+    extra = _PLUGIN_LOCALES.get(lang, {})
+    extra_base = _PLUGIN_LOCALES.get(_DEFAULT_LANG, {})
 
     def t(key, **kwargs):
         value = data.get(key)
         if value is None:
-            value = fallback.get(key)
+            value = extra.get(key)
+        if value is None:
+            value = base.get(key)
+        if value is None:
+            value = extra_base.get(key)
         if value is None:
             return key
         if kwargs:
@@ -207,7 +233,9 @@ def render_page(page, lang):
 
     page = re.sub(r'\{\{i18n:([A-Za-z0-9_.]+)\}\}', repl, page)
     page = page.replace('{{LANGSEL}}', lang_selector(lang))
-    payload = json.dumps(flatten(_load_locale(lang)), ensure_ascii=False)
+    messages = flatten(_load_locale(lang))
+    messages.update(_PLUGIN_LOCALES.get(lang, {}))
+    payload = json.dumps(messages, ensure_ascii=False)
     script = '<script>window.I18N=' + payload + ';</script>'
     if 'window.I18N=' not in page:
         if '</head>' in page:
@@ -223,3 +251,76 @@ def render_page(page, lang):
     except Exception:
         pass
     return page
+
+
+_PLACEHOLDER_RE = re.compile(r'\{(\w+)\}')
+
+
+def validate_locales():
+    """Return a list of human-readable locale validation errors."""
+    errors = []
+    en = _load_locale(_DEFAULT_LANG)
+    en_keys = flatten(en)
+    if not en_keys:
+        return ['en.json: no translation keys found']
+    try:
+        names = sorted(os.listdir(_LOCALES_DIR))
+    except OSError as exc:
+        return ['locales directory: %s' % exc]
+    for name in names:
+        if not name.endswith('.json'):
+            continue
+        code = name[:-5]
+        path = os.path.join(_LOCALES_DIR, name)
+        try:
+            with open(path, encoding='utf-8') as f:
+                data = json.load(f)
+        except (OSError, ValueError) as exc:
+            errors.append('%s: invalid JSON: %s' % (name, exc))
+            continue
+        meta = data.get('_meta') or {}
+        for field in ('name', 'code', 'dir'):
+            if not meta.get(field):
+                errors.append('%s: _meta.%s is missing' % (name, field))
+        if meta.get('code') and meta.get('code') != code:
+            errors.append('%s: _meta.code is %r, expected %r'
+                          % (name, meta.get('code'), code))
+        keys = flatten(data)
+        for key in sorted(set(en_keys) - set(keys)):
+            errors.append('%s: missing key %s' % (name, key))
+        for key in sorted(set(keys) - set(en_keys)):
+            errors.append('%s: extra key %s' % (name, key))
+        for key in sorted(set(en_keys) & set(keys)):
+            value = keys[key]
+            if not value:
+                errors.append('%s: empty value for %s' % (name, key))
+                continue
+            if value != value.strip():
+                errors.append('%s: leading/trailing whitespace for %s'
+                              % (name, key))
+            expected = set(_PLACEHOLDER_RE.findall(en_keys[key]))
+            actual = set(_PLACEHOLDER_RE.findall(value))
+            if expected != actual:
+                errors.append('%s: placeholder mismatch for %s (%r != %r)'
+                              % (name, key, sorted(actual), sorted(expected)))
+    return errors
+
+
+def _main(argv):
+    if len(argv) != 1 or argv[0] != 'check':
+        print('usage: python3 -m dls.i18n check')
+        return 2
+    errors = validate_locales()
+    if errors:
+        for error in errors:
+            print(error)
+        return 1
+    locales = available_locales()
+    print('OK: %d locales, %d keys'
+          % (len(locales), len(flatten(_load_locale(_DEFAULT_LANG)))))
+    return 0
+
+
+if __name__ == '__main__':
+    import sys
+    raise SystemExit(_main(sys.argv[1:]))

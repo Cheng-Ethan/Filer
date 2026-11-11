@@ -11,6 +11,7 @@ from .config import (_ALLOWED_ENCODINGS, _MAX_TEXT_PREVIEW_BYTES,
                      _preview_kind)
 from .office import (_office_text, docx_blocks, office_pdf,
                      office_pdf_page, office_pdf_page_count)
+from .providers import REGISTRY, EditContext
 from .templates import (_BROWSE_TEMPLATE, _ICON_DEL, _ICON_DL, _ICON_INFO,
                         _ICON_PREVIEW, _INFO_JS, _INFO_MODAL,
                         _DOC_PREVIEW_TEMPLATE, _PAGES_PREVIEW_TEMPLATE, _PDF_PREVIEW_TEMPLATE,
@@ -48,6 +49,17 @@ class PreviewMixin:
             self._send_file_forbidden(full, name, target)
             return
 
+        edit = self._edit_link(name, target, full)
+        provider = REGISTRY.find_preview(name, full)
+        if provider:
+            try:
+                page = provider.render(EditContext(
+                    self, name, target, target_dir, full))
+            except Exception as e:
+                self._preview_message(str(e), name, target)
+                return
+            self._send_html(page)
+            return
         kind = _preview_kind(name)
         if kind is None and _detect_file_encoding(full):
             kind = 'text'
@@ -73,10 +85,16 @@ class PreviewMixin:
             detected = enc or _detect_encoding(raw) or 'utf-8'
             text = _clip_text(_decode_bytes(raw, detected))
             payload = json.dumps(text).replace('</', '<\\/')
+            md_base = urllib.parse.quote(target, safe='/')
+            if not md_base.endswith('/'):
+                md_base += '/'
+            base_payload = json.dumps(md_base).replace('</', '<\\/')
             page = _PREVIEW_TEMPLATE.replace('{{MD_TEXT}}', payload) \
+                .replace('{{MD_BASE}}', base_payload) \
                 .replace('{{FILENAME}}', html.escape(name)) \
                 .replace('{{BACK}}', back) \
-                .replace('{{DL}}', html.escape(dl, quote=True))
+                .replace('{{DL}}', html.escape(dl, quote=True)) \
+                .replace('{{EDIT}}', edit)
             self._send_text_page(page)
             return
 
@@ -105,6 +123,7 @@ class PreviewMixin:
                     .replace('{{ENC_LINKS}}', links)
                     .replace('{{BACK}}', back)
                     .replace('{{DL}}', html.escape(dl, quote=True))
+                    .replace('{{EDIT}}', edit)
                     .replace('{{NOTE}}', '')
                     .replace('{{TEXT}}', html.escape(text, quote=False)))
             self._send_text_page(page)
@@ -123,6 +142,7 @@ class PreviewMixin:
                             .replace('{{FILENAME}}', html.escape(name))
                             .replace('{{BACK}}', back)
                             .replace('{{DL}}', html.escape(dl, quote=True))
+                            .replace('{{EDIT}}', edit)
                             .replace('{{NOTE}}', note)
                             .replace('{{PDFURL}}', html.escape(viewer, quote=True)))
                     self._send_text_page(page)
@@ -142,6 +162,7 @@ class PreviewMixin:
                             .replace('{{FILENAME}}', html.escape(name))
                             .replace('{{BACK}}', back)
                             .replace('{{DL}}', html.escape(dl, quote=True))
+                            .replace('{{EDIT}}', edit)
                             .replace('{{NOTE}}', note)
                             .replace('{{PAGES}}', pages))
                     self._send_text_page(page)
@@ -153,6 +174,7 @@ class PreviewMixin:
                         .replace('{{FILENAME}}', html.escape(name))
                         .replace('{{BACK}}', back)
                         .replace('{{DL}}', html.escape(dl, quote=True))
+                        .replace('{{EDIT}}', edit)
                         .replace('{{NOTE}}', note)
                         .replace('{{PDFURL}}', html.escape(pdf_url, quote=True)))
                 self._send_text_page(page)
@@ -198,6 +220,7 @@ class PreviewMixin:
                     .replace('{{FILENAME}}', html.escape(name))
                     .replace('{{BACK}}', back)
                     .replace('{{DL}}', html.escape(dl, quote=True))
+                    .replace('{{EDIT}}', edit)
                     .replace('{{ENC_LINKS}}', '')
                     .replace('{{NOTE}}', note)
                     .replace('{{BODY}}', ''.join(body) or ('<p>' + t('preview.empty_body') + '</p>')))
@@ -216,6 +239,7 @@ class PreviewMixin:
                     .replace('{{ENC_LINKS}}', '')
                     .replace('{{BACK}}', back)
                     .replace('{{DL}}', html.escape(dl, quote=True))
+                    .replace('{{EDIT}}', edit)
                     .replace('{{NOTE}}', note)
                     .replace('{{TEXT}}', html.escape(text, quote=False)))
             self._send_text_page(page)
@@ -223,19 +247,19 @@ class PreviewMixin:
 
         raw_url = html.escape(url_path + '?raw=1', quote=True)
         if kind == 'svg':
-            self._send_wrap(name, back, dl, '<img src="%s" alt="">' % raw_url)
+            self._send_wrap(name, back, dl, '<img src="%s" alt="">' % raw_url, edit)
             return
         if kind == 'html':
             self._send_wrap(name, back, dl,
-                            '<iframe sandbox src="%s" title="preview"></iframe>' % raw_url)
+                            '<iframe sandbox src="%s" title="preview"></iframe>' % raw_url, edit)
             return
         if kind == 'audio':
             self._send_wrap(name, back, dl,
-                            '<audio controls src="%s"></audio>' % raw_url)
+                            '<audio controls src="%s"></audio>' % raw_url, edit)
             return
         if kind == 'video':
             self._send_wrap(name, back, dl,
-                            '<video controls src="%s"></video>' % raw_url)
+                            '<video controls src="%s"></video>' % raw_url, edit)
             return
         if kind == 'image':
             ctype = mimetypes.guess_type(full)[0] or 'application/octet-stream'
@@ -249,11 +273,12 @@ class PreviewMixin:
     def _send_text_page(self, page):
         page = page.replace('</body>', '<script>' + _TTS_JS + '</script></body>')
         self._send_html(page)
-    def _send_wrap(self, name, back, dl, body):
+    def _send_wrap(self, name, back, dl, body, edit=''):
         page = (_WRAP_TEMPLATE
                 .replace('{{FILENAME}}', html.escape(name))
                 .replace('{{BACK}}', back)
                 .replace('{{DL}}', html.escape(dl, quote=True))
+                .replace('{{EDIT}}', edit)
                 .replace('{{BODY}}', body))
         self._send_html(page)
     def _serve_pdfjs(self):
@@ -470,6 +495,7 @@ class PreviewMixin:
                 .replace('{{ENC_LINKS}}', '')
                 .replace('{{BACK}}', html.escape(target or '/', quote=True))
                 .replace('{{DL}}', html.escape(dl, quote=True))
+                .replace('{{EDIT}}', '')
                 .replace('{{NOTE}}', '<div class="note">%s</div>' % html.escape(msg))
                 .replace('{{TEXT}}', ''))
         self._send_html(page)
@@ -491,11 +517,19 @@ class PreviewMixin:
         url_path = urllib.parse.quote(urllib.parse.unquote(path), safe='/')
 
         kind = _preview_kind(name_disp)
+        if kind is None and _detect_file_encoding(abs_path):
+            kind = 'text'
         if kind in ('text', 'markdown', 'docx', 'xlsx', 'pptx', 'doc', 'rtf'):
-            src = '/preview?' + urllib.parse.urlencode(
+            # These formats already have a full preview page with their own
+            # toolbar. Redirect instead of nesting two toolbars in an iframe.
+            target = '/preview?' + urllib.parse.urlencode(
                 {'dir': dir_disp, 'name': name_disp})
-        else:
-            src = url_path + '?raw=1'
+            self.send_response(302)
+            self.send_header('Location', target)
+            self.send_header('Content-Length', '0')
+            self.end_headers()
+            return
+        src = url_path + '?raw=1'
         fallback = directory or '/'
         if not fallback.startswith('/'):
             fallback = '/' + fallback
@@ -504,7 +538,7 @@ class PreviewMixin:
         if kind:
             prev = ('<a class="btn btn-prev" href="/preview?'
                     + urllib.parse.urlencode({'dir': dir_disp, 'name': name_disp})
-                    + '" title="' + t('preview.preview_title') + '">' + _ICON_PREVIEW + '</a>')
+                    + '" title="' + t('list.preview_title') + '">' + _ICON_PREVIEW + '</a>')
 
         dl = '<a class="btn btn-dl" href="' + url_path + '?dl=1" title="' + t('common.download') + '">' + _ICON_DL + '</a>'
 
@@ -532,9 +566,5 @@ class PreviewMixin:
             .replace('{{ACTION_DOWNLOAD}}', dl) \
             .replace('{{ACTION_DELETE}}', info_btn + delete_form)
         page = page.replace('</body>', _INFO_MODAL + '<script>' + _INFO_JS + '</script></body>')
-        self.send_response(200)
-        self.send_header('Content-Type', 'text/html; charset=utf-8')
-        self.send_header('Cache-Control', 'no-store')
-        self.end_headers()
-        self.wfile.write(page.encode('utf-8'))
+        self._send_html(page)
 

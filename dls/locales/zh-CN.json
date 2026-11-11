@@ -17,7 +17,8 @@
     "preview": "预览",
     "info": "更多信息",
     "cancel": "取消",
-    "ok": "确定"
+    "ok": "确定",
+    "edit": "编辑"
   },
   "toolbar": {
     "read_article": "读文章",
@@ -48,7 +49,9 @@
     "upload_note": "选中一个或多个文件后点击上传，文件将保存到当前目录。",
     "legend_title": "图标图例",
     "type_file_ext": "文件（{ext}）",
-    "type_file_no_ext": "文件（无后缀）"
+    "type_file_no_ext": "文件（无后缀）",
+    "edit_title": "编辑 {name}",
+    "legend_edit": "编辑（文本文件及插件）"
   },
   "dialog": {
     "delete": {
@@ -198,5 +201,19 @@
     "hsiaochen": "晓臻",
     "hsiaoyu": "晓雨",
     "yunjhe": "云哲"
+  },
+  "edit": {
+    "title": "编辑文件",
+    "edit_title": "编辑 {name}",
+    "back_preview": "返回预览",
+    "save": "保存",
+    "encoding": "编码",
+    "note": "保存前会在 cache/edit-backups 保留备份；如果文件在磁盘上已被修改，保存会被拒绝。",
+    "unsupported": "该文件暂不支持网页编辑。",
+    "conflict": "文件在打开后已被外部修改，请重新加载后再保存。",
+    "too_large": "文件过大，无法编辑（上限 2 MiB）。",
+    "not_text": "该文件不是文本格式，无法编辑。",
+    "read_failed": "无法读取文件。",
+    "symlink": "符号链接不能编辑。"
   }
 }

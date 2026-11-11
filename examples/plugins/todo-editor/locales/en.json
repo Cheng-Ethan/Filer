@@ -1,0 +1,6 @@
+{
+  "title": "Todo editor",
+  "save": "Save todo list",
+  "note": "Example plugin: edits .todo files as a checkbox list.",
+  "empty": "This todo list is empty. Add items on the server or edit the file as text."
+}

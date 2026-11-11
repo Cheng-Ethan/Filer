@@ -392,6 +392,7 @@ class ArticleMixin:
                 .replace('{{FILENAME}}', title)
                 .replace('{{BACK}}', '/')
                 .replace('{{DL}}', html.escape(url, quote=True))
+                .replace('{{EDIT}}', '')
                 .replace('{{NOTE}}', '')
                 .replace('{{BODY}}', body))
         page = page.replace('</body>', '<script>window.TTS_URL=%s;</script></body>'
