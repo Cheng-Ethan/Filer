@@ -40,7 +40,7 @@ Initial public release.
 - Directory listings now send `Cache-Control: no-store` so mobile browsers do
   not keep an old page without the edit action.
 - Updated README screenshots for the new preview toolbar, text editor, and
-  mobile layout.
+  mobile layout, using an all-English UI.
 - Fixed Markdown preview to resolve relative image and link URLs against the
   document directory; relative images now load through `?raw=1` instead of
   returning a 404.

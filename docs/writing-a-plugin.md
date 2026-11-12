@@ -112,12 +112,12 @@ action. The save goes through the core and creates a backup.
 }
 ```
 
-`plugins/hello-editor/locales/zh-CN.json`:
+`plugins/hello-editor/locales/xx.json` (replace `xx` with your locale code):
 
 ```json
 {
-  "title": "Hello 编辑器",
-  "save": "保存"
+  "title": "Translated title",
+  "save": "Translated save label"
 }
 ```
 
